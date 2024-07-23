@@ -2,7 +2,7 @@
 
 #Default values
 threads=4
-
+wd="./bac_ass_pipe_out"
 
 ## Help message
 bac_ass_pipe_help() {
@@ -33,7 +33,7 @@ bac_ass_pipe_help() {
     exit 1
 }
 
-while getopts '1:2:t:w:r:f:d' opt; do
+while getopts '1:2:d:t:w:r:f:n' opt; do
     case $opt in
         1)
         R1_file=$OPTARG
@@ -68,11 +68,13 @@ then
   echo "Error: Input R1 file is required."
   bac_ass_pipe_help
 fi
+
 if [ -z $R2_file ];
 then
   echo "Error: Input R2 file is required."
   bac_ass_pipe_help
 fi
+
 if [ -z $kraken_db ];
 then
   echo "Error: a kraken database is required."
@@ -83,12 +85,13 @@ fi
 if [ -z $prefix1 ];
 then 
     prefix1=$(basename $R1_file)
-    prefix1=${prefix%%.*}
+    prefix1=${prefix1%%.*}
 fi
+
 if [ -z $prefix2 ];
 then 
     prefix2=$(basename $R2_file)
-    prefix2=${prefix%%.*}
+    prefix2=${prefix2%%.*}
 fi
 
 if [ ${wd: -1} = / ];
@@ -101,14 +104,18 @@ fi
 ##### FUNCTIONS #####
 create_wd(){
 ## CREATE WORKING DIRECTORY
-    if [ -d $wd ]
+
+    ## Check if output directory exists
+    if [ -d $1 ];
     then
-    echo $timestamp": Rewriting directory..."
-    echo " "
-    else 
-        echo $timestamp": Creating directory..."
         echo " "
-        mkdir $wd
+        echo "Directory $1 exists."
+        echo " "
+    else 
+        mkdir $1
+        echo " "
+        echo "Directory $1 created"
+        echo " " 
     fi
 }
 
@@ -117,7 +124,11 @@ trimming(){
     echo "Step 1: Trimming using fastp"
     echo "FastP options: " $f
     echo " "
-    fastp $f -i $R1_file -I $R2_file -o $wd$prefix1".filt.fastq.gz" -O $wd$prefix2".filt.fastq.gz"
+    fastp $f --thread $threads -i $R1_file -I $R2_file -o $wd$prefix1".filt.fastq.gz" -O $wd$prefix2".filt.fastq.gz"
+    
+    # Use the filtered reads in the rest of the pipeline
+        R1_file=$wd$prefix1".filt.fastq.gz"
+        R2_file=$wd$prefix2".filt.fastq.gz"
 }
 
-trimming
+create_wd $wd && trimming

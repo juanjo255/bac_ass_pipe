@@ -14,23 +14,35 @@ bac_ass_pipe_help() {
 
     Version: 0.1
 
-    Usage: bac_ass_pipe.sh [options] FASTQ
+    Usage: bac_ass_pipe.sh [options] -1 reads_R1.fastq -2 reads_R2.fastq
 
-    Options:
-        -i        Input file. [required].
+    Options:    
+    Required:
+
+        -1        Input R1 paired end file. [required].
+        -2        Input R2 paired end file. [required].
+        -d        Kraken database. if you do not have one, you need to create it first.
+    
+    Optional:
         -t        Threads. [4].
         -w        Working directory. Path to create the folder which will contain all mitnanex information. [./bac_ass_pipe_out].
-        -r        Prefix name add to every produced file. [input file name].
-        -d        Different output directory. Create a different output directory every run (it uses the date and time). [False]. 
+        -f        FastP options. [" "].
+        -n        Different output directory. Create a different output directory every run (it uses the date and time). [False]. 
         *         Help.
     "
     exit 1
 }
 
-while getopts 'i:t:w:r:d' opt; do
+while getopts '1:2:t:w:r:f:d' opt; do
     case $opt in
-        i)
-        input_file=$OPTARG
+        1)
+        R1_file=$OPTARG
+        ;;
+        2)
+        R2_file=$OPTARG
+        ;;
+        d)
+        kraken_db=$OPTARG
         ;;
         t)
         threads=$OPTARG
@@ -38,10 +50,10 @@ while getopts 'i:t:w:r:d' opt; do
         w)
         wd=$OPTARG
         ;;
-        w)
-        prefix=$OPTARG
+        f)
+        fastp_opts=$OPTARG
         ;;
-        d)
+        n)
         output_dir="mitnanex_results_$(date  "+%Y-%m-%d_%H-%M-%S")/"
         ;;
         *)
@@ -51,17 +63,32 @@ while getopts 'i:t:w:r:d' opt; do
 done
 
 # Check if required arguments are provided
-if [ -z "$input_file" ];
+if [ -z $R1_file ];
 then
-  echo "Error: Input file is required."
+  echo "Error: Input R1 file is required."
+  bac_ass_pipe_help
+fi
+if [ -z $R2_file ];
+then
+  echo "Error: Input R2 file is required."
+  bac_ass_pipe_help
+fi
+if [ -z $kraken_db ];
+then
+  echo "Error: a kraken database is required."
   bac_ass_pipe_help
 fi
 
 ## PREFIX name to use for the resulting files
-if [ -z $prefix ];
+if [ -z $prefix1 ];
 then 
-    prefix=$(basename $input_file)
-    prefix=${prefix%%.*}
+    prefix1=$(basename $R1_file)
+    prefix1=${prefix%%.*}
+fi
+if [ -z $prefix2 ];
+then 
+    prefix2=$(basename $R2_file)
+    prefix2=${prefix%%.*}
 fi
 
 if [ ${wd: -1} = / ];
@@ -84,3 +111,13 @@ create_wd(){
         mkdir $wd
     fi
 }
+
+trimming(){
+    echo " " 
+    echo "Step 1: Trimming using fastp"
+    echo "FastP options: " $f
+    echo " "
+    fastp $f -i $R1_file -I $R2_file -o $wd$prefix1".filt.fastq.gz" -O $wd$prefix2".filt.fastq.gz"
+}
+
+trimming

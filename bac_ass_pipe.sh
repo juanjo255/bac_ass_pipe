@@ -124,7 +124,8 @@ trimming(){
     echo "Step 1: Trimming using fastp"
     echo "FastP options: " $f
     echo " "
-    fastp $f --thread $threads -i $R1_file -I $R2_file -o $wd$prefix1".filt.fastq.gz" -O $wd$prefix2".filt.fastq.gz"
+    fastp $f --thread $threads -i $R1_file -I $R2_file -o $wd$prefix1".filt.fastq.gz" -O $wd$prefix2".filt.fastq.gz" \
+            -j $wd"fastp.json" -h $wd"fastp.html"
     
     # Use the filtered reads in the rest of the pipeline
         R1_file=$wd$prefix1".filt.fastq.gz"

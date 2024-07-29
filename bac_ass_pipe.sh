@@ -132,4 +132,9 @@ trimming(){
         R2_file=$wd$prefix2".filt.fastq.gz"
 }
 
+assembly (){
+    ## Unicycler
+    echo "Step 2: Assemblying with Unicycler and SKESA"
+}
+
 create_wd $wd && trimming

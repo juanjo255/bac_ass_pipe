@@ -135,6 +135,10 @@ trimming(){
 assembly (){
     ## Unicycler
     echo "Step 2: Assemblying with Unicycler and SKESA"
+    unicycler -t $threads -1 $R1_file -2 $R2_file -o $wd
+    skesa --reads $R1_file,$R2_file --cores $threads --memory 48 --contigs_out $wd
+
+
 }
 
 create_wd $wd && trimming

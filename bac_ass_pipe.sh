@@ -3,6 +3,7 @@
 #Default values
 threads=4
 wd="./bac_ass_pipe_out"
+memory=$(awk '/MemFree/ { printf "%.0f", $2/1024/1024 }' /proc/meminfo)
 
 ## Help message
 bac_ass_pipe_help() {
@@ -25,15 +26,16 @@ bac_ass_pipe_help() {
     
     Optional:
         -t        Threads. [4].
+        -m        Memory for SKESA in GB. [$memory]
         -w        Working directory. Path to create the folder which will contain all mitnanex information. [./bac_ass_pipe_out].
-        -f        FastP options. [" "].
-        -n        Different output directory. Create a different output directory every run (it uses the date and time). [False]. 
+        -f        FastP options. [' '].
+        -n        Different output directory. Create a different output directory every run (it uses the date and time). [False].
         *         Help.
     "
     exit 1
 }
 
-while getopts '1:2:d:t:w:r:f:n' opt; do
+while getopts '1:2:d:t:m:w:r:f:n' opt; do
     case $opt in
         1)
         R1_file=$OPTARG
@@ -46,6 +48,9 @@ while getopts '1:2:d:t:w:r:f:n' opt; do
         ;;
         t)
         threads=$OPTARG
+        ;;
+        m)
+        memory=$OPTARG
         ;;
         w)
         wd=$OPTARG
@@ -136,7 +141,7 @@ assembly (){
     ## Unicycler
     echo "Step 2: Assemblying with Unicycler and SKESA"
     unicycler -t $threads -1 $R1_file -2 $R2_file -o $wd
-    skesa --reads $R1_file,$R2_file --cores $threads --memory 48 --contigs_out $wd
+    skesa --reads $R1_file,$R2_file --cores $threads --memory $memory --contigs_out $wd
 
 
 }

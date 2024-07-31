@@ -141,9 +141,14 @@ assembly (){
     ## Unicycler
     echo "Step 2: Assemblying with Unicycler and SKESA"
     unicycler -t $threads -1 $R1_file -2 $R2_file -o $wd
-    skesa --reads $R1_file,$R2_file --cores $threads --memory $memory --contigs_out $wd
+    skesa --reads $R1_file,$R2_file --cores $threads --memory $memory --contigs_out $wd"/assembly_skesa.fasta"
+}
 
+quality_asm (){
+    echo "Step 3: Quality assessment of assembly produced using QUAST, BUSCO, Kraken2"
 
 }
 
-create_wd $wd && trimming
+create_wd $wd && trimming && assembly
+
+echo "Finished" 

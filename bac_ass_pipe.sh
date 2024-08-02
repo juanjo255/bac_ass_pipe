@@ -149,6 +149,19 @@ assembly (){
     skesa --reads $R1_file,$R2_file --cores $threads --memory $memory --contigs_out $wd"skesa_asm/assembly_skesa.fasta"
 }
 
+make_signatures(){
+    k="51"
+    scaled="100"
+    common_path="/home/labcompjavier/juanPicon/neumococos_gustavo/references_genomes/asm_comparison_sourmash/"
+
+    ## Signature for query
+    sourmash sketch dna -f -p k=$k,scaled=$scaled  --outdir $common_path "/home/labcompjavier/juanPicon/neumococos_gustavo/bac_ass_pipe_out/skesa_asm/assembly_skesa.fasta"
+
+    sourmash sketch dna -f -p k=$k,scaled=$scaled  --outdir $common_path"/references_signatures/" \
+        $(find "/home/labcompjavier/juanPicon/neumococos_gustavo/references_genomes/genomes/" -type f -name "*.fna")
+}
+
+
 quality_asm (){
     echo "Step 3: Quality assessment of assembly produced using QUAST, BUSCO, Kraken2 and sourmash"
     
@@ -156,7 +169,7 @@ quality_asm (){
     busco busco -f -c $threads -m genome -l lactobacillales_odb10 -i $wd"/unicycler_asm/assembly.fasta" --metaeuk -o $wd"/unicycler_asm/busco_assessment"
     ## BUSCO UNICYCLER
     busco -f -c $threads -m genome -l lactobacillales_odb10 -i $wd"/unicycler_asm/assembly_skesa.fasta" --metaeuk -o $wd"skesa_asm/busco_assessment"
-    
+
 }
 
 create_wd $wd && trimming && assembly && quality_asm

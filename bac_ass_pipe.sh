@@ -145,18 +145,20 @@ assembly (){
     create_wd $wd"skesa_asm"
     create_wd $wd"unicycler_asm"
 
-    #unicycler -t $threads -1 $R1_file -2 $R2_file -o $wd"/unicycler_asm"
+    unicycler -t $threads -1 $R1_file -2 $R2_file -o $wd"/unicycler_asm"
     skesa --reads $R1_file,$R2_file --cores $threads --memory $memory --contigs_out $wd"skesa_asm/assembly_skesa.fasta"
 }
 
 quality_asm (){
     echo "Step 3: Quality assessment of assembly produced using QUAST, BUSCO, Kraken2"
+    
+    ## BUSCO SKESA
+    busco busco -f -c $threads -m genome -l lactobacillales_odb10 -i $wd"/unicycler_asm/assembly.fasta" --metaeuk -o $wd"/unicycler_asm/busco_assessment"
+    ## BUSCO UNICYCLER
+    busco -f -c $threads -m genome -l lactobacillales_odb10 -i $wd"/unicycler_asm/assembly_skesa.fasta" --metaeuk -o $wd"skesa_asm/busco_assessment"
 
 }
 
-#create_wd $wd #&& trimming && assembly
-#assembly
+create_wd $wd && trimming && assembly && quality_asm
 
-echo $wd
-
-echo "Finished" 
+echo "Finished"

@@ -150,13 +150,13 @@ assembly (){
 }
 
 quality_asm (){
-    echo "Step 3: Quality assessment of assembly produced using QUAST, BUSCO, Kraken2"
+    echo "Step 3: Quality assessment of assembly produced using QUAST, BUSCO, Kraken2 and sourmash"
     
     ## BUSCO SKESA
     busco busco -f -c $threads -m genome -l lactobacillales_odb10 -i $wd"/unicycler_asm/assembly.fasta" --metaeuk -o $wd"/unicycler_asm/busco_assessment"
     ## BUSCO UNICYCLER
     busco -f -c $threads -m genome -l lactobacillales_odb10 -i $wd"/unicycler_asm/assembly_skesa.fasta" --metaeuk -o $wd"skesa_asm/busco_assessment"
-
+    
 }
 
 create_wd $wd && trimming && assembly && quality_asm

@@ -35,7 +35,7 @@ bac_ass_pipe_help() {
     exit 1
 }
 
-while getopts '1:2:d:t:m:w:r:f:n' opt; do
+while getopts '1:2:d:t:m:w:f:n' opt; do
     case $opt in
         1)
         R1_file=$OPTARG
@@ -54,12 +54,13 @@ while getopts '1:2:d:t:m:w:r:f:n' opt; do
         ;;
         w)
         wd=$OPTARG
+        echo "directory"
         ;;
         f)
         fastp_opts=$OPTARG
         ;;
         n)
-        output_dir="mitnanex_results_$(date  "+%Y-%m-%d_%H-%M-%S")/"
+        output_dir="bac_ass_pipe_results_$(date  "+%Y-%m-%d_%H-%M-%S")/"
         ;;
         *)
         bac_ass_pipe_help
@@ -109,7 +110,6 @@ fi
 ##### FUNCTIONS #####
 create_wd(){
 ## CREATE WORKING DIRECTORY
-
     ## Check if output directory exists
     if [ -d $1 ];
     then
@@ -140,8 +140,13 @@ trimming(){
 assembly (){
     ## Unicycler
     echo "Step 2: Assemblying with Unicycler and SKESA"
-    unicycler -t $threads -1 $R1_file -2 $R2_file -o $wd
-    skesa --reads $R1_file,$R2_file --cores $threads --memory $memory --contigs_out $wd"/assembly_skesa.fasta"
+    
+    ## Create output folders
+    create_wd $wd"skesa_asm"
+    create_wd $wd"unicycler_asm"
+
+    #unicycler -t $threads -1 $R1_file -2 $R2_file -o $wd"/unicycler_asm"
+    skesa --reads $R1_file,$R2_file --cores $threads --memory $memory --contigs_out $wd"skesa_asm/assembly_skesa.fasta"
 }
 
 quality_asm (){
@@ -149,6 +154,9 @@ quality_asm (){
 
 }
 
-create_wd $wd && trimming && assembly
+#create_wd $wd #&& trimming && assembly
+#assembly
+
+echo $wd
 
 echo "Finished" 

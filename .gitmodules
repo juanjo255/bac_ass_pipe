@@ -1,0 +1,3 @@
+[submodule "SeroCall"]
+	path = SeroCall
+	url = https://github.com/juanjo255/SeroCall.git

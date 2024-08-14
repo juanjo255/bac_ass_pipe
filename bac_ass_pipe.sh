@@ -157,7 +157,7 @@ assembly (){
     #create_wd $wd"skesa_asm"
     create_wd $wd"unicycler_asm"
 
-    unicycler -t $threads -1 $R1_file -2 $R2_file -o $wd"/unicycler_asm"
+    unicycler -t $threads -1 $R1_file -2 $R2_file -o $wd"/unicycler_asm" > $wd"/bac_ass_pipe.log"
     #skesa --reads $R1_file,$R2_file --cores $threads --memory $memory --contigs_out $wd"skesa_asm/assembly_skesa.fasta"
 }
 
@@ -172,21 +172,21 @@ run_sourmash(){
     ## Signature for query
     echo ""
     echo "Creating query signature"
-    sourmash sketch dna -f -p k=$k,scaled=$scaled --outdir $outdir_query $wd"/unicycler_asm/assembly.fasta" 2> "/dev/null" &&
+    sourmash sketch dna -f -p k=$k,scaled=$scaled --outdir $outdir_query $wd"/unicycler_asm/assembly.fasta" 2>> $wd"/bac_ass_pipe.log" &&
     echo "Sourmash signature for query is at: "$outdir_query
 
     ## Signature for reference
     echo ""
     echo "Creating references signatures. It might take some minutes"
     sourmash sketch dna -f -p k=$k,scaled=$scaled  --outdir $outdir_ref \
-        $(find $references_genomes_folder -type f -name "*.fna")  2> "/dev/null" && 
+        $(find $references_genomes_folder -type f -name "*.fna")  2>> $wd"/bac_ass_pipe.log" && 
     echo "Sourmash signatures for references are at: "$outdir_ref
 
 
     ## Run search
     echo ""
     echo "Searching query signatures in reference signatures"
-    sourmash search --containment -k $k $outdir_query"assembly.fasta.sig" $outdir_ref -o $outdir_query"/sourmash_out.csv" 2> "/dev/null"
+    sourmash search --containment -k $k $outdir_query"assembly.fasta.sig" $outdir_ref -o $outdir_query"/sourmash_out.csv" 2>> $wd"/bac_ass_pipe.log"
 
 }
 
@@ -215,7 +215,7 @@ quality_asm (){
 
 cps_serotyping (){
     echo "Step 4: Capsule serotyping using PneumoCAT"
-    
+
 
 }
 

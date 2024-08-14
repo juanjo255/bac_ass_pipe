@@ -5,6 +5,7 @@ threads=4
 wd="./bac_ass_pipe_out"
 memory=$(awk '/MemFree/ { printf "%.0f", $2/1024/1024 }' /proc/meminfo)
 k=51
+scaled=100
 
 ## Help message
 bac_ass_pipe_help() {
@@ -144,8 +145,8 @@ trimming(){
             -j $wd"fastp.json" -h $wd"fastp.html"
     
     # Use the filtered reads in the rest of the pipeline
-        R1_file=$wd$prefix1".filt.fastq.gz"
-        R2_file=$wd$prefix2".filt.fastq.gz"
+    R1_file=$wd$prefix1".filt.fastq.gz"
+    R2_file=$wd$prefix2".filt.fastq.gz"
 }
 
 assembly (){
@@ -161,29 +162,31 @@ assembly (){
 }
 
 run_sourmash(){
-    scaled="100"
+
     outdir_ref=$wd"/reference_signatures/"
-    outdir_query=$wd"/unicycler_asm/sourmash_assess/"
+    outdir_query=$wd"/sourmash_assess/"
 
     create_wd $outdir_ref
     create_wd $outdir_query
 
     ## Signature for query
     echo ""
+    echo "Creating query signature"
+    sourmash sketch dna -f -p k=$k,scaled=$scaled --outdir $outdir_query $wd"/unicycler_asm/assembly.fasta" 2> "/dev/null" &&
     echo "Sourmash signature for query is at: "$outdir_query
-    sourmash sketch dna -f -p k=$k,scaled=$scaled  --outdir $outdir_query $wd"/unicycler_asm/assembly.fasta" &&
 
     ## Signature for reference
     echo ""
-    echo "Sourmash signatures for references are at: "$outdir_ref
+    echo "Creating references signatures. It might take some minutes"
     sourmash sketch dna -f -p k=$k,scaled=$scaled  --outdir $outdir_ref \
-        $(find $references_genomes_folder -type f -name "*.fna") &&
+        $(find $references_genomes_folder -type f -name "*.fna")  2> "/dev/null" && 
+    echo "Sourmash signatures for references are at: "$outdir_ref
 
 
     ## Run search
     echo ""
     echo "Searching query signatures in reference signatures"
-    sourmash search --containment -k $k $outdir_query"assembly.fasta.sig" $outdir_ref -o $outdir_query"/sourmash_out.csv"
+    sourmash search --containment -k $k $outdir_query"assembly.fasta.sig" $outdir_ref -o $outdir_query"/sourmash_out.csv" 2> "/dev/null"
 
 }
 
@@ -194,24 +197,28 @@ quality_asm (){
     echo "Step 3: Quality assessment of assembly produced using QUAST, BUSCO, Kraken2 and sourmash"
     
     ## BUSCO UNICYCLER
-    #busco busco -f -c $threads -m genome -l lactobacillales_odb10 -i $wd"/unicycler_asm/assembly.fasta" --metaeuk -o $wd"/unicycler_asm/busco_assessment"
+    busco -f -c $threads -m genome -l lactobacillales_odb10 -i $wd"/unicycler_asm/assembly.fasta" --metaeuk -o $wd"/unicycler_asm/busco_assessment" &&
     ## BUSCO SKESA
     #busco -f -c $threads -m genome -l lactobacillales_odb10 -i $wd"/unicycler_asm/assembly_skesa.fasta" --metaeuk -o $wd"skesa_asm/busco_assessment"
 
     ## SOURMASH
     run_sourmash &&
     echo ""
-    echo $(cut -d , -f 1,3 $outdir_query"/sourmash_out.csv")
+    echo "Selecting the most similar reference"
     reference=$(cut -d , -f 1,3 $outdir_query"/sourmash_out.csv" | head -n 2 | grep -o "GC[^.]*") &&
     reference=$(find $references_genomes_folder -type f -name $reference"*.fna")
     echo "The selected reference genome is: " $reference
 
     ## QUAST
     quast -t $threads -r $reference -1 $R1_file -2 $R2_file -o $wd"/quast_assess" $wd"/unicycler_asm/assembly.fasta"
+}
+
+cps_serotyping (){
+    echo "Step 4: Capsule serotyping using PneumoCAT"
+    
 
 }
 
-#create_wd $wd && trimming && assembly && 
-quality_asm
+#create_wd $wd && trimming && assembly && quality_asm
 
 echo "Finished"

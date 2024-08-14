@@ -214,8 +214,16 @@ quality_asm (){
 }
 
 cps_serotyping (){
+    
     echo "Step 4: Capsule serotyping using PneumoCAT"
-
+    echo ""
+    echo "Renaiming FASTQ files to match PneumoCAT requirement"
+    out_pneumocat=$wd"/pneumocat_assess"
+    create_wd $out_pneumocat
+    cp $R1_file $wd"/pneumocat_assess/1.fastq"
+    cp $R2_file $wd"/pneumocat_assess/2.fastq"
+    PneumoCaT.py --fastq_1 $out_pneumocat"/1.fastq" --fastq_2 $out_pneumocat"/2.fastq" \
+        --threads $threads --output_dir $out_pneumocat
 
 }
 

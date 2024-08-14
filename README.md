@@ -1,2 +1,2 @@
-# bac_ass_pipe
-Bacterial Assembly Pipeline 
+# penumoPipe
+A pipeline to de novo assembly, annotate and serotype pneumococcal Illumina sequencing data 

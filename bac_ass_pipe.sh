@@ -4,6 +4,7 @@
 threads=4
 wd="./bac_ass_pipe_out"
 memory=$(awk '/MemFree/ { printf "%.0f", $2/1024/1024 }' /proc/meminfo)
+k=51
 
 ## Help message
 bac_ass_pipe_help() {
@@ -23,6 +24,7 @@ bac_ass_pipe_help() {
         -1        Input R1 paired end file. [required].
         -2        Input R2 paired end file. [required].
         -d        Kraken database. if you do not have one, you need to create it first.
+        -r        Reference genomes folder. This is to get the closest genome in the NCBI for a better genome quality analysis.
     
     Optional:
         -t        Threads. [4].
@@ -35,7 +37,7 @@ bac_ass_pipe_help() {
     exit 1
 }
 
-while getopts '1:2:d:t:m:w:f:n' opt; do
+while getopts '1:2:d:r:t:m:w:f:n' opt; do
     case $opt in
         1)
         R1_file=$OPTARG
@@ -45,6 +47,9 @@ while getopts '1:2:d:t:m:w:f:n' opt; do
         ;;
         d)
         kraken_db=$OPTARG
+        ;;
+        r)
+        references_genomes_folder=$OPTARG
         ;;
         t)
         threads=$OPTARG
@@ -84,6 +89,12 @@ fi
 if [ -z $kraken_db ];
 then
   echo "Error: a kraken database is required."
+  bac_ass_pipe_help
+fi
+
+if [ -z $references_genomes_folder ];
+then
+  echo "Error: a folder with reference genomes is required."
   bac_ass_pipe_help
 fi
 
@@ -139,39 +150,68 @@ trimming(){
 
 assembly (){
     ## Unicycler
-    echo "Step 2: Assemblying with Unicycler and SKESA"
+    echo "Step 2: Assemblying with Unicycler"
     
     ## Create output folders
-    create_wd $wd"skesa_asm"
+    #create_wd $wd"skesa_asm"
     create_wd $wd"unicycler_asm"
 
     unicycler -t $threads -1 $R1_file -2 $R2_file -o $wd"/unicycler_asm"
-    skesa --reads $R1_file,$R2_file --cores $threads --memory $memory --contigs_out $wd"skesa_asm/assembly_skesa.fasta"
+    #skesa --reads $R1_file,$R2_file --cores $threads --memory $memory --contigs_out $wd"skesa_asm/assembly_skesa.fasta"
 }
 
-make_signatures(){
-    k="51"
+run_sourmash(){
     scaled="100"
-    common_path="/home/labcompjavier/juanPicon/neumococos_gustavo/references_genomes/asm_comparison_sourmash/"
+    outdir_ref=$wd"/reference_signatures/"
+    outdir_query=$wd"/unicycler_asm/sourmash_assess/"
+
+    create_wd $outdir_ref
+    create_wd $outdir_query
 
     ## Signature for query
-    sourmash sketch dna -f -p k=$k,scaled=$scaled  --outdir $common_path "/home/labcompjavier/juanPicon/neumococos_gustavo/bac_ass_pipe_out/skesa_asm/assembly_skesa.fasta"
+    echo ""
+    echo "Sourmash signature for query is at: "$outdir_query
+    sourmash sketch dna -f -p k=$k,scaled=$scaled  --outdir $outdir_query $wd"/unicycler_asm/assembly.fasta" &&
 
-    sourmash sketch dna -f -p k=$k,scaled=$scaled  --outdir $common_path"/references_signatures/" \
-        $(find "/home/labcompjavier/juanPicon/neumococos_gustavo/references_genomes/genomes/" -type f -name "*.fna")
+    ## Signature for reference
+    echo ""
+    echo "Sourmash signatures for references are at: "$outdir_ref
+    sourmash sketch dna -f -p k=$k,scaled=$scaled  --outdir $outdir_ref \
+        $(find $references_genomes_folder -type f -name "*.fna") &&
+
+
+    ## Run search
+    echo ""
+    echo "Searching query signatures in reference signatures"
+    sourmash search --containment -k $k $outdir_query"assembly.fasta.sig" $outdir_ref -o $outdir_query"/sourmash_out.csv"
+
 }
 
 
 quality_asm (){
+    
+    echo ""
     echo "Step 3: Quality assessment of assembly produced using QUAST, BUSCO, Kraken2 and sourmash"
     
-    ## BUSCO SKESA
-    busco busco -f -c $threads -m genome -l lactobacillales_odb10 -i $wd"/unicycler_asm/assembly.fasta" --metaeuk -o $wd"/unicycler_asm/busco_assessment"
     ## BUSCO UNICYCLER
-    busco -f -c $threads -m genome -l lactobacillales_odb10 -i $wd"/unicycler_asm/assembly_skesa.fasta" --metaeuk -o $wd"skesa_asm/busco_assessment"
+    #busco busco -f -c $threads -m genome -l lactobacillales_odb10 -i $wd"/unicycler_asm/assembly.fasta" --metaeuk -o $wd"/unicycler_asm/busco_assessment"
+    ## BUSCO SKESA
+    #busco -f -c $threads -m genome -l lactobacillales_odb10 -i $wd"/unicycler_asm/assembly_skesa.fasta" --metaeuk -o $wd"skesa_asm/busco_assessment"
+
+    ## SOURMASH
+    run_sourmash &&
+    echo ""
+    echo $(cut -d , -f 1,3 $outdir_query"/sourmash_out.csv")
+    reference=$(cut -d , -f 1,3 $outdir_query"/sourmash_out.csv" | head -n 2 | grep -o "GC[^.]*") &&
+    reference=$(find $references_genomes_folder -type f -name $reference"*.fna")
+    echo "The selected reference genome is: " $reference
+
+    ## QUAST
+    quast -t $threads -r $reference -1 $R1_file -2 $R2_file -o $wd"/quast_assess" $wd"/unicycler_asm/assembly.fasta"
 
 }
 
-create_wd $wd && trimming && assembly && quality_asm
+#create_wd $wd && trimming && assembly && 
+quality_asm
 
 echo "Finished"

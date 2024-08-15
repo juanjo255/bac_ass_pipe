@@ -223,7 +223,6 @@ cps_serotyping (){
     serocall -t $threads -o $out_serocall $R1_file $R2_file
 }
 
-#create_wd $wd && trimming && assembly && quality_asm
-cps_serotyping
+create_wd $wd && trimming && assembly && quality_asm && cps_serotyping
 
 echo "Finished"

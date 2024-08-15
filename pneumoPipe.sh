@@ -215,18 +215,13 @@ quality_asm (){
 
 cps_serotyping (){
 
-    echo "Step 4: Capsule serotyping using PneumoCAT"
+    echo "Step 4: Capsule serotyping using SeroCall"
     echo ""
-    echo "Renaming FASTQ files to match PneumoCAT requirement"
-    out_pneumocat=$wd"/pneumocat_assess"
-    create_wd $out_pneumocat
-    cp $R1_file $wd"/pneumocat_assess/1.fastq"
-    cp $R2_file $wd"/pneumocat_assess/2.fastq"
+    out_serocall=$wd"/serotype_seroCall"
+    create_wd $out_serocall
 
-    echo "Running PneumoCAT"
     echo ""
-    PneumoCaT.py --fastq_1 $out_pneumocat"/1.fastq" --fastq_2 $out_pneumocat"/2.fastq" \
-        --threads $threads --output_dir $out_pneumocat
+    python3 serocall -t $threads -o $out_serocall $R1_file $R2_file
 }
 
 #create_wd $wd && trimming && assembly && quality_asm

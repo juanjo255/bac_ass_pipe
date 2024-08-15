@@ -220,7 +220,7 @@ cps_serotyping (){
     create_wd $out_serocall
 
     echo ""
-    python3 serocall -t $threads -o $out_serocall $R1_file $R2_file
+    serocall -t $threads -o $out_serocall $R1_file $R2_file
 }
 
 #create_wd $wd && trimming && assembly && quality_asm

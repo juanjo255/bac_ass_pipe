@@ -87,11 +87,11 @@ then
   pneumoPipe_help
 fi
 
-if [ -z $kraken_db ];
-then
-  echo "Error: a kraken database is required."
-  pneumoPipe_help
-fi
+# if [ -z $kraken_db ];
+# then
+#   echo "Error: a kraken database is required."
+#   pneumoPipe_help
+# fi
 
 if [ -z $references_genomes_folder ];
 then

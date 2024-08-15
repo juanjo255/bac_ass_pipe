@@ -190,7 +190,6 @@ run_sourmash(){
 
 }
 
-
 quality_asm (){
     
     echo ""

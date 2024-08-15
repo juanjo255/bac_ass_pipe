@@ -1,1 +1,1 @@
-micromamba install spades fastp kraken2 skesa unicycler
+micromamba install spades fastp unicycler bwa samtools

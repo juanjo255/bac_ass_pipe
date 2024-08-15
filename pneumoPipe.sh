@@ -163,7 +163,7 @@ assembly (){
 
 run_sourmash(){
 
-    outdir_ref=$wd"/reference_signatures/"
+    outdir_ref=$wd"/reference_genomes_signatures/"
     outdir_query=$wd"/sourmash_assess/"
 
     create_wd $outdir_ref

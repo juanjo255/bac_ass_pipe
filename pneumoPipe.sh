@@ -2,22 +2,22 @@
 
 #Default values
 threads=4
-wd="./bac_ass_pipe_out"
+wd="./pneumoPipe_out"
 memory=$(awk '/MemFree/ { printf "%.0f", $2/1024/1024 }' /proc/meminfo)
 k=51
 scaled=100
 
 ## Help message
-bac_ass_pipe_help() {
+pneumoPipe_help() {
     echo "
-    bac_ass_pipe - Bacterial Assembly Pipeline for Illumina reads
+    pneumoPipe - Bacterial Assembly Pipeline for Illumina reads
 
     Author:
     Juan Picon Cossio
 
     Version: 0.1
 
-    Usage: bac_ass_pipe.sh [options] -1 reads_R1.fastq -2 reads_R2.fastq
+    Usage: pneumoPipe.sh [options] -1 reads_R1.fastq -2 reads_R2.fastq
 
     Options:    
     Required:
@@ -30,7 +30,7 @@ bac_ass_pipe_help() {
     Optional:
         -t        Threads. [4].
         -m        Memory for SKESA in GB. [$memory]
-        -w        Working directory. Path to create the folder which will contain all mitnanex information. [./bac_ass_pipe_out].
+        -w        Working directory. Path to create the folder which will contain all mitnanex information. [./pneumoPipe_out].
         -f        FastP options. [' '].
         -n        Different output directory. Create a different output directory every run (it uses the date and time). [False].
         *         Help.
@@ -66,10 +66,10 @@ while getopts '1:2:d:r:t:m:w:f:n' opt; do
         fastp_opts=$OPTARG
         ;;
         n)
-        output_dir="bac_ass_pipe_results_$(date  "+%Y-%m-%d_%H-%M-%S")/"
+        output_dir="pneumoPipe_results_$(date  "+%Y-%m-%d_%H-%M-%S")/"
         ;;
         *)
-        bac_ass_pipe_help
+        pneumoPipe_help
         ;;
     esac 
 done
@@ -78,25 +78,25 @@ done
 if [ -z $R1_file ];
 then
   echo "Error: Input R1 file is required."
-  bac_ass_pipe_help
+  pneumoPipe_help
 fi
 
 if [ -z $R2_file ];
 then
   echo "Error: Input R2 file is required."
-  bac_ass_pipe_help
+  pneumoPipe_help
 fi
 
 if [ -z $kraken_db ];
 then
   echo "Error: a kraken database is required."
-  bac_ass_pipe_help
+  pneumoPipe_help
 fi
 
 if [ -z $references_genomes_folder ];
 then
   echo "Error: a folder with reference genomes is required."
-  bac_ass_pipe_help
+  pneumoPipe_help
 fi
 
 ## PREFIX name to use for the resulting files
@@ -157,7 +157,7 @@ assembly (){
     #create_wd $wd"skesa_asm"
     create_wd $wd"unicycler_asm"
 
-    unicycler -t $threads -1 $R1_file -2 $R2_file -o $wd"/unicycler_asm" > $wd"/bac_ass_pipe.log"
+    unicycler -t $threads -1 $R1_file -2 $R2_file -o $wd"/unicycler_asm" > $wd"/pneumoPipe.log"
     #skesa --reads $R1_file,$R2_file --cores $threads --memory $memory --contigs_out $wd"skesa_asm/assembly_skesa.fasta"
 }
 
@@ -172,21 +172,21 @@ run_sourmash(){
     ## Signature for query
     echo ""
     echo "Creating query signature"
-    sourmash sketch dna -f -p k=$k,scaled=$scaled --outdir $outdir_query $wd"/unicycler_asm/assembly.fasta" 2>> $wd"/bac_ass_pipe.log" &&
+    sourmash sketch dna -f -p k=$k,scaled=$scaled --outdir $outdir_query $wd"/unicycler_asm/assembly.fasta" 2>> $wd"/pneumoPipe.log" &&
     echo "Sourmash signature for query is at: "$outdir_query
 
     ## Signature for reference
     echo ""
     echo "Creating references signatures. It might take some minutes"
     sourmash sketch dna -f -p k=$k,scaled=$scaled  --outdir $outdir_ref \
-        $(find $references_genomes_folder -type f -name "*.fna")  2>> $wd"/bac_ass_pipe.log" && 
+        $(find $references_genomes_folder -type f -name "*.fna")  2>> $wd"/pneumoPipe.log" && 
     echo "Sourmash signatures for references are at: "$outdir_ref
 
 
     ## Run search
     echo ""
     echo "Searching query signatures in reference signatures"
-    sourmash search --containment -k $k $outdir_query"assembly.fasta.sig" $outdir_ref -o $outdir_query"/sourmash_out.csv" 2>> $wd"/bac_ass_pipe.log"
+    sourmash search --containment -k $k $outdir_query"assembly.fasta.sig" $outdir_ref -o $outdir_query"/sourmash_out.csv" 2>> $wd"/pneumoPipe.log"
 
 }
 

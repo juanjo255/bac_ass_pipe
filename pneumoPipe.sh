@@ -60,7 +60,6 @@ while getopts '1:2:d:r:t:m:w:f:n' opt; do
         ;;
         w)
         wd=$OPTARG
-        echo "directory"
         ;;
         f)
         fastp_opts=$OPTARG

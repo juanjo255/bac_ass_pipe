@@ -195,7 +195,7 @@ quality_asm (){
     echo "Step 3: Quality assessment of assembly produced using QUAST, BUSCO, Kraken2 and sourmash"
     
     ## BUSCO UNICYCLER
-    busco -f -c $threads -m genome -l lactobacillales_odb10 -i $wd"/unicycler_asm/assembly.fasta" --metaeuk -o $wd"/unicycler_asm/busco_assessment" &&
+    busco -f -c $threads -m genome -l lactobacillales_odb10 -i $wd"/unicycler_asm/assembly.fasta" --metaeuk -o $wd"/unicycler_asm/busco_assessment" 2>> $wd"/pneumoPipe.log" &&
     ## BUSCO SKESA
     #busco -f -c $threads -m genome -l lactobacillales_odb10 -i $wd"/unicycler_asm/assembly_skesa.fasta" --metaeuk -o $wd"skesa_asm/busco_assessment"
 
@@ -208,7 +208,7 @@ quality_asm (){
     echo "The selected reference genome is: " $reference
 
     ## QUAST
-    quast -t $threads -r $reference -1 $R1_file -2 $R2_file -o $wd"/quast_assess" $wd"/unicycler_asm/assembly.fasta"
+    quast -t $threads -r $reference -1 $R1_file -2 $R2_file -o $wd"/quast_assess" $wd"/unicycler_asm/assembly.fasta" 2>> $wd"/pneumoPipe.log"
 }
 
 cps_serotyping (){
@@ -219,7 +219,7 @@ cps_serotyping (){
     create_wd $out_serocall
 
     echo ""
-    serocall -t $threads -o $out_serocall $R1_file $R2_file
+    serocall -t $threads -o $out_serocall"/seroCall" $R1_file $R2_file
 }
 
 create_wd $wd && trimming && assembly && quality_asm && cps_serotyping

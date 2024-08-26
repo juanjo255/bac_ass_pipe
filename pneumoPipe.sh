@@ -256,6 +256,6 @@ touch $report
 echo "-------------------------" >> $report
 echo "Data to proccess: " $R1_file $R2_file  >> $report
 
-#create_wd $wd && trimming && assembly && quality_asm && cps_serotyping
-quality_asm
+create_wd $wd && trimming && assembly && quality_asm && cps_serotyping
+
 echo "Finished"

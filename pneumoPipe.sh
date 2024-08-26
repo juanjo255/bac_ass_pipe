@@ -210,6 +210,7 @@ quality_asm (){
     reference=$(cut -d "," -f "1,3" $outdir_query"/sourmash_out.csv" | head -n 2 | grep -o "GC[^.]*") &&
     reference=$(find $references_genomes_folder -type f -name $reference"*.fna")
     reference_feature=$(grep -o ".*/" <<< $reference)"genomic.gff" 
+    echo $reference_feature
     reference_similarity=$(cut -d "," -f "1,3" $outdir_query"/sourmash_out.csv" | head -n 2 | grep -o "^0...")
     echo "The selected reference genome is: " $reference
     echo "With a similarity of: " $reference_similarity
@@ -239,9 +240,6 @@ cps_serotyping (){
     echo $out_serocall"/seroCall_calls.txt" >> $report
 }
 
-gene_annotation (){
-
-}
 
 ## START PIPELINE
 ## Create report for summary of pipeline results

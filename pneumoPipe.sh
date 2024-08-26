@@ -168,21 +168,21 @@ run_sourmash(){
     ## Signature for query
     echo ""
     echo "Creating query signature"
-    sourmash sketch dna -f -p k=$k,scaled=$scaled --outdir $outdir_query $wd"/unicycler_asm/assembly.fasta" >> $wd"/pneumoPipe.log" &&
+    sourmash sketch dna -f -p k=$k,scaled=$scaled --outdir $outdir_query $wd"/unicycler_asm/assembly.fasta" &>> $wd"/pneumoPipe.log" &&
     echo "Sourmash signature for query is at: "$outdir_query
 
     ## Signature for reference
     echo ""
     echo "Creating references signatures. It might take some minutes"
     sourmash sketch dna -f -p k=$k,scaled=$scaled  --outdir $outdir_ref \
-        $(find $references_genomes_folder -type f -name "*.fna")  >> $wd"/pneumoPipe.log" && 
+        $(find $references_genomes_folder -type f -name "*.fna")  &>> $wd"/pneumoPipe.log" && 
     echo "Sourmash signatures for references are at: "$outdir_ref
 
 
     ## Run search
     echo ""
     echo "Searching query signatures in reference signatures"
-    sourmash search --containment -k $k $outdir_query"assembly.fasta.sig" $outdir_ref -o $outdir_query"/sourmash_out.csv" >> $wd"/pneumoPipe.log"
+    sourmash search --containment -k $k $outdir_query"assembly.fasta.sig" $outdir_ref -o $outdir_query"/sourmash_out.csv" &>> $wd"/pneumoPipe.log"
 
 }
 
@@ -192,7 +192,7 @@ quality_asm (){
     echo "Step 3: Quality assessment of assembly produced using QUAST, BUSCO, Kraken2 and sourmash"
     
     ## BUSCO UNICYCLER
-    busco -f -c $threads -m genome -l $busco_dataset -i $wd"/unicycler_asm/assembly.fasta" --metaeuk -o $wd"/unicycler_asm/busco_assessment" 2>> $wd"/pneumoPipe.log" &&
+    busco -f -c $threads -m genome -l $busco_dataset -i $wd"/unicycler_asm/assembly.fasta" --metaeuk -o $wd"/unicycler_asm/busco_assessment" >> $wd"/pneumoPipe.log" &&
     ## BUSCO SKESA
     #busco -f -c $threads -m genome -l lactobacillales_odb10 -i $wd"/unicycler_asm/assembly_skesa.fasta" --metaeuk -o $wd"skesa_asm/busco_assessment"
 
@@ -200,15 +200,15 @@ quality_asm (){
     run_sourmash &&
     echo ""
     echo "Selecting the most similar reference"
-    reference=$(cut -d , -f 1,3 $outdir_query"/sourmash_out.csv" | head -n 2 | grep -o "GC[^.]*") &&
+    reference=$(cut -d "," -f "1,3" $outdir_query"/sourmash_out.csv" | head -n 2 | grep -o "GC[^.]*") &&
     reference=$(find $references_genomes_folder -type f -name $reference"*.fna")
     echo "The selected reference genome is: " $reference
     
     ## Add to report
-    echo "The selected reference genome is: " $reference >> $wd"report.txt"
+    echo "The selected reference genome is: " $reference >> $report
 
     ## QUAST
-    quast -t $threads -r $reference -1 $R1_file -2 $R2_file -o $wd"/quast_assess" $wd"/unicycler_asm/assembly.fasta" 2>> $wd"/pneumoPipe.log"
+    quast -t $threads -r $reference -1 $R1_file -2 $R2_file -o $wd"/quast_assess" $wd"/unicycler_asm/assembly.fasta" &>> $wd"/pneumoPipe.log"
 }
 
 cps_serotyping (){
@@ -219,13 +219,21 @@ cps_serotyping (){
     out_serocall=$wd"/serotype_seroCall"
     create_wd $out_serocall
     echo " "
-    serocall -t $threads -o $out_serocall"/seroCall" $R1_file $R2_file
+    serocall -t $threads -o $out_serocall"/seroCall" $R1_file $R2_file &&
+
+    ## Add to report
+    echo "cps serotyping" >> $report
+    echo $out_serocall"/seroCall_calls.txt" >> $report
 }
 
 ## START PIPELINE
 
-echo "-------------------------" >> $wd"report.txt" 
-echo "Data to proccess: " $R1_file $R2_file  >> $wd"report.txt" 
+## Create report for summary of pipeline results
+report=$wd"report.txt"
+touch $report
+
+echo "-------------------------" >> $report 
+echo "Data to proccess: " $R1_file $R2_file  >> $report 
 
 #create_wd $wd && trimming && assembly && quality_asm && cps_serotyping
 quality_asm

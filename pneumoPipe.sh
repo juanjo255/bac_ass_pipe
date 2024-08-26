@@ -137,12 +137,20 @@ trimming(){
     echo "Step 1: Trimming using fastp"
     echo "FastP options: " $f
     echo " "
+
+    fastqc_out=$wd"QC_check"
+    create_wd $fastqc_out
+    fastqc --quiet --threads $threads -o $fastqc_out $R1_file $R2_file
     fastp $f --thread $threads -i $R1_file -I $R2_file -o $wd$prefix1".filt.fastq.gz" -O $wd$prefix2".filt.fastq.gz" \
             -j $wd"fastp.json" -h $wd"fastp.html"
     
     # Use the filtered reads in the rest of the pipeline
     R1_file=$wd$prefix1".filt.fastq.gz"
     R2_file=$wd$prefix2".filt.fastq.gz"
+
+    fastqc --quiet --threads $threads -o $fastqc_out $R1_file $R2_file
+    multiqc $fastqc_out
+
 }
 
 assembly (){
@@ -189,7 +197,7 @@ run_sourmash(){
 quality_asm (){
     
     echo " "
-    echo "Step 3: Quality assessment of assembly produced using QUAST, BUSCO, Kraken2, seqkit and sourmash"
+    echo "Step 3: Quality assessment of assembly produced using QUAST, BUSCO, Kraken2 and sourmash"
     echo " "
     echo "This step will take some minutes..."
     
@@ -220,7 +228,7 @@ quality_asm (){
 
     ## QUAST
     echo "Running Quast"
-    quast --circos --plots-format "png" -t $threads -r $reference --features $reference_feature -1 $R1_file -2 $R2_file \
+    quast --circos --plots-format "png" -t $threads -r $reference --features "GFF:"$reference_feature -1 $R1_file -2 $R2_file \
         -o $wd"/quast_assess" $wd"/unicycler_asm/assembly.fasta" &>> $wd"/pneumoPipe.log"
 }
 

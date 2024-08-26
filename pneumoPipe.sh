@@ -209,6 +209,7 @@ quality_asm (){
     echo "Selecting the most similar reference"
     reference=$(cut -d "," -f "1,3" $outdir_query"/sourmash_out.csv" | head -n 2 | grep -o "GC[^.]*") &&
     reference=$(find $references_genomes_folder -type f -name $reference"*.fna")
+    reference_feature=$(grep -o ".*/" <<< $reference)"genomic.gff" 
     reference_similarity=$(cut -d "," -f "1,3" $outdir_query"/sourmash_out.csv" | head -n 2 | grep -o "^0...")
     echo "The selected reference genome is: " $reference
     echo "With a similarity of: " $reference_similarity
@@ -219,7 +220,7 @@ quality_asm (){
 
     ## QUAST
     echo "Running Quast"
-    quast --circos --plots-format "png" -t $threads -r $reference -1 $R1_file -2 $R2_file \
+    quast --circos --plots-format "png" -t $threads -r $reference --features $reference_feature -1 $R1_file -2 $R2_file \
         -o $wd"/quast_assess" $wd"/unicycler_asm/assembly.fasta" &>> $wd"/pneumoPipe.log"
 }
 
@@ -239,7 +240,7 @@ cps_serotyping (){
 }
 
 gene_annotation (){
-    
+
 }
 
 ## START PIPELINE

@@ -199,10 +199,7 @@ quality_asm (){
     echo " "
     echo "Step 3: Quality assessment of assembly produced using QUAST, BUSCO, Kraken2 and sourmash"
     echo " "
-    echo "This step will take some minutes..."
-    
-    ## General stats
-
+echo "This step will take some minutes..."      
     
     ## BUSCO UNICYCLER
     echo "Running BUSCO"
@@ -247,6 +244,12 @@ cps_serotyping (){
     cat $out_serocall"/seroCall_calls.txt" >> $report
 }
 
+sequence_typing (){
+    mlst --quiet --scheme "spneumoniae" --threads $threads $wd"/unicycler_asm/assembly.fasta" > $wd"MLST.tsv"
+    cat $wd"MLST.tsv" >> $report
+}
+
+
 
 ## Create report for summary of pipeline results
 create_wd $wd &&
@@ -257,6 +260,6 @@ echo "Data to proccess: " $R1_file $R2_file  >> $report
 
 
 ## START PIPELINE
-trimming && assembly && quality_asm && cps_serotyping
+trimming && assembly && quality_asm && cps_serotyping && sequence_typing
 
 echo "Finished"

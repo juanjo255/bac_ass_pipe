@@ -149,7 +149,7 @@ trimming(){
     R2_file=$wd$prefix2".filt.fastq.gz"
 
     fastqc --quiet --threads $threads -o $fastqc_out $R1_file $R2_file
-    multiqc $fastqc_out
+    multiqc $fastqc_out -o $wd
 
 }
 

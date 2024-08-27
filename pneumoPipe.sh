@@ -244,18 +244,19 @@ cps_serotyping (){
 
     ## Add to report
     echo "cps serotyping" >> $report
-    echo $out_serocall"/seroCall_calls.txt" >> $report
+    cat $out_serocall"/seroCall_calls.txt" >> $report
 }
 
 
-## START PIPELINE
 ## Create report for summary of pipeline results
+create_wd $wd &&
 report=$wd"report.txt"
 touch $report
-
 echo "-------------------------" >> $report
 echo "Data to proccess: " $R1_file $R2_file  >> $report
 
-create_wd $wd && trimming && assembly && quality_asm && cps_serotyping
+
+## START PIPELINE
+trimming && assembly && quality_asm && cps_serotyping
 
 echo "Finished"

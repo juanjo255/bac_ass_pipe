@@ -2,3 +2,7 @@ micromamba install python=3.8 blast=2.15 spades fastp unicycler bwa samtools bus
 pip install sourmash multiqc
 mlst-download_pub_mlst -j 5 -d $(grep -oP .*(?=bin) <<< $(which mlst))"db/pubmlst"
 mlst-make_blast_db
+
+## download alleles schemes
+wget https://rest.pubmlst.org/db/pubmlst_spneumoniae_seqdef/schemes/2/loci
+cat loci | grep -o '"https[^"]*' |

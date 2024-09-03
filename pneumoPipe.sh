@@ -180,21 +180,21 @@ run_sourmash(){
     ## Signature for query
     echo ""
     echo "Creating query signature"
-    sourmash sketch dna -f -p k=$k,scaled=$scaled --outdir $outdir_query $wd"/unicycler_asm/assembly.fasta" &>> $wd"/pneumoPipe.log" &&
+    sourmash sketch dna -f -p k=$k,scaled=$scaled --outdir $outdir_query $wd"/unicycler_asm/assembly.fasta" 2>> $wd"/pneumoPipe.log" &&
     echo "Sourmash signature for query is at: "$outdir_query
 
     ## Signature for reference
     echo ""
     echo "Creating references signatures. It might take some minutes"
     sourmash sketch dna -f -p k=$k,scaled=$scaled  --outdir $outdir_ref \
-        $(find $references_genomes_folder -type f -name "*.fna")  &>> $wd"/pneumoPipe.log" && 
+        $(find $references_genomes_folder -type f -name "*.fna")  2>> $wd"/pneumoPipe.log" &&
     echo "Sourmash signatures for references are at: "$outdir_ref
 
 
     ## Run search
     echo ""
     echo "Searching query signatures in reference signatures"
-    sourmash search --containment -k $k $outdir_query"assembly.fasta.sig" $outdir_ref -o $outdir_query"/sourmash_out.csv" &>> $wd"/pneumoPipe.log"
+    sourmash search --containment -k $k $outdir_query"assembly.fasta.sig" $outdir_ref -o $outdir_query"/sourmash_out.csv" 2>> $wd"/pneumoPipe.log"
 
 }
 
@@ -230,7 +230,7 @@ echo "This step will take some minutes..."
     ## QUAST
     echo "Running Quast"
     quast --circos --plots-format "png" -t $threads -r $reference --features "GFF:"$reference_feature -1 $R1_file -2 $R2_file \
-        -o $wd"/quast_assess" $wd"/unicycler_asm/assembly.fasta" &>> $wd"/pneumoPipe.log"
+        -o $wd"/quast_assess" $wd"/unicycler_asm/assembly.fasta" 2>> $wd"/pneumoPipe.log"
 }
 
 cps_serotyping (){
@@ -271,6 +271,19 @@ update_MLST_db () {
     echo " " 
     mlst-download_pub_mlst -j 5 -d echo $(grep -oP ".*(?=bin)" <<< $(which mlst))"db/pubmlst"
     mlst-make_blast_db
+
+    # FIXME 
+    # This part could generate problems, I am trying just to get the executable path to locate other folder
+    if [ "$(grep -o "/" <<< $0 | wc -l)" -gt 0 ]; then
+        exec_path=$(grep -o ".*/" <<< $0)
+    else
+        ## This wont work for a while I guess
+        exec_path=$(grep -o ".*/" $(which pneumoPipe.sh))
+    fi
+    
+    echo "Updating the cgMLST"
+    bash $exec_path"/pneumoSchemeLoci/download_schemes_spneumoniae.sh"
+    echo "Files were downloaded in the current directory"
 }   
 
 ## Create report for summary of pipeline results
@@ -282,6 +295,8 @@ echo "Data to proccess: " $R1_file $R2_file  >> $report
 
 
 ## START PIPELINE
-trimming && assembly && quality_asm && cps_serotyping && sequence_typing
+#trimming && assembly && quality_asm && cps_serotyping && sequence_typing
+echo $0
+grep -o "/" <<< $0 | wc -l 
 
 echo "Finished"

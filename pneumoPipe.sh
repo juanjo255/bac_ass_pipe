@@ -6,6 +6,7 @@ wd="./pneumoPipe_out"
 k=51
 scaled=100
 busco_dataset="lactobacillales_odb10"
+path_to_scheme=$wd
 
 ## Help message
 pneumoPipe_help() {
@@ -34,12 +35,13 @@ pneumoPipe_help() {
         -f        FastP options. [' '].
         -n        Different output directory. Create a different output directory every run (it uses the date and time). [False].
         -u        Update MLST and cgMLST database. Otherwise it will assume you have both databases correctly set. [False]
+        -s        Path to schemes. [working directory]
         *         Help.
     "
     exit 1
 }
 
-while getopts '1:2:d:r:t:w:f:nu' opt; do
+while getopts '1:2:d:r:t:w:f:nus:' opt; do
     case $opt in
         1)
         R1_file=$OPTARG
@@ -67,6 +69,9 @@ while getopts '1:2:d:r:t:w:f:nu' opt; do
         ;;
         u)
         update_MLST=1
+        ;;
+        s)
+        path_to_scheme=$OPTARG
         ;;
         *)
         pneumoPipe_help
@@ -259,8 +264,14 @@ sequence_typing (){
     update_MLST_db
     fi
 
+    ## Classic MLST
     mlst --quiet --scheme "spneumoniae" --threads $threads $wd"/unicycler_asm/assembly.fasta" > $wd"MLST.tsv"
     cat $wd"MLST.tsv" >> $report
+
+    ## cgMLST
+    chewBBACA.py PrepExternalSchema -g $path_to_scheme -o /path/to/OutputFolder --cpu $threads
+
+
 
 }
 
@@ -285,8 +296,8 @@ update_MLST_db () {
     fi
     
     echo "Updating the cgMLST"
-    bash $exec_path"/pneumoSchemeLoci/download_schemes_spneumoniae.sh"
-    echo "Files were downloaded in the current directory"
+    bash $exec_path"/pneumoSchemeLoci/download_schemes_spneumoniae.sh" $wd
+    echo "Files were downloaded in the working directory"
 }   
 
 ## Create report for summary of pipeline results
@@ -298,8 +309,7 @@ echo "Data to proccess: " $R1_file $R2_file  >> $report
 
 
 ## START PIPELINE
-#trimming && assembly && quality_asm && cps_serotyping && sequence_typing
-echo $0
-grep -o "/" <<< $0 | wc -l 
+
+trimming && assembly && quality_asm && cps_serotyping && sequence_typing
 
 echo "Finished"

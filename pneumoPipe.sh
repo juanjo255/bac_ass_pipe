@@ -274,11 +274,14 @@ update_MLST_db () {
 
     # FIXME 
     # This part could generate problems, I am trying just to get the executable path to locate other folder
-    if [ "$(grep -o "/" <<< $0 | wc -l)" -gt 0 ]; then
-        exec_path=$(grep -o ".*/" <<< $0)
-    else
+    if which pneumoPipe.sh > /dev/null 2>&1; then
         ## This wont work for a while I guess
         exec_path=$(grep -o ".*/" $(which pneumoPipe.sh))
+    else
+        if [ "$(grep -o "/" <<< $0 | wc -l)" -gt 0 ]; then
+            exec_path=$(grep -o ".*/" <<< $0)
+        else
+            exec_path="./"
     fi
     
     echo "Updating the cgMLST"

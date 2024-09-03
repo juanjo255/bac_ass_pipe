@@ -12,3 +12,5 @@ Data to proccess:  /Users/jjpc/PiconCossio/UNI-SEQ/neumococos_gustavo/raw_files/
 Data to proccess:  /Users/jjpc/PiconCossio/UNI-SEQ/neumococos_gustavo/raw_files/CUS_SPN_01_R1.fastq.gz /Users/jjpc/PiconCossio/UNI-SEQ/neumococos_gustavo/raw_files/CUS_SPN_01_R2.fastq.gz
 -------------------------
 Data to proccess:  /Users/jjpc/PiconCossio/UNI-SEQ/neumococos_gustavo/raw_files/CUS_SPN_01_R1.fastq.gz /Users/jjpc/PiconCossio/UNI-SEQ/neumococos_gustavo/raw_files/CUS_SPN_01_R2.fastq.gz
+-------------------------
+Data to proccess:  /Users/jjpc/PiconCossio/UNI-SEQ/neumococos_gustavo/raw_files/CUS_SPN_01_R1.fastq.gz /Users/jjpc/PiconCossio/UNI-SEQ/neumococos_gustavo/raw_files/CUS_SPN_01_R2.fastq.gz

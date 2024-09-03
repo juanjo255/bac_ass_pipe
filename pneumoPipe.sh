@@ -33,12 +33,13 @@ pneumoPipe_help() {
         -w        Working directory. Path to create the folder which will contain all mitnanex information. [./pneumoPipe_out].
         -f        FastP options. [' '].
         -n        Different output directory. Create a different output directory every run (it uses the date and time). [False].
+        -u        Update MLST and cgMLST database. Otherwise it will assume you have both databases correctly set. [False]
         *         Help.
     "
     exit 1
 }
 
-while getopts '1:2:d:r:t:w:f:n' opt; do
+while getopts '1:2:d:r:t:w:f:nu' opt; do
     case $opt in
         1)
         R1_file=$OPTARG
@@ -63,6 +64,9 @@ while getopts '1:2:d:r:t:w:f:n' opt; do
         ;;
         n)
         output_dir="pneumoPipe_results_$(date  "+%Y-%m-%d_%H-%M-%S")/"
+        ;;
+        u)
+        update_MLST=1
         ;;
         *)
         pneumoPipe_help
@@ -245,11 +249,29 @@ cps_serotyping (){
 }
 
 sequence_typing (){
+    
+    echo " "
+    echo "Sequence typing using classic MLST and  cgMLST"
+
+    ## If user decide to update database
+    if [ -z $update_MLST ];
+    then
+    update_MLST_db
+    fi
+
     mlst --quiet --scheme "spneumoniae" --threads $threads $wd"/unicycler_asm/assembly.fasta" > $wd"MLST.tsv"
     cat $wd"MLST.tsv" >> $report
+
 }
 
+update_MLST_db () {
 
+    echo " "
+    echo "Updating the MLST database"
+    echo " " 
+    mlst-download_pub_mlst -j 5 -d echo $(grep -oP ".*(?=bin)" <<< $(which mlst))"db/pubmlst"
+    mlst-make_blast_db
+}   
 
 ## Create report for summary of pipeline results
 create_wd $wd &&

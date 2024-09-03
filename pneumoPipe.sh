@@ -2,6 +2,7 @@
 
 #Default values
 threads=4
+output_dir="pneumoPipe_out"
 wd="./pneumoPipe_out"
 k=51
 scaled=100
@@ -280,7 +281,7 @@ update_MLST_db () {
     echo " "
     echo "Updating the MLST database"
     echo " " 
-    mlst-download_pub_mlst -j 5 -d echo $(grep -oP ".*(?=bin)" <<< $(which mlst))"db/pubmlst"
+    mlst-download_pub_mlst -j 5 -d $(echo $(grep -o ".*(?=bin)" <<< $(which mlst))"db/pubmlst")
     mlst-make_blast_db
 
     # FIXME 
@@ -293,12 +294,13 @@ update_MLST_db () {
             exec_path=$(grep -o ".*/" <<< $0)
         else
             exec_path="./"
+        fi
     fi
     
     echo "Updating the cgMLST"
     bash $exec_path"/pneumoSchemeLoci/download_schemes_spneumoniae.sh" $wd
     echo "Files were downloaded in the working directory"
-}   
+}
 
 ## Create report for summary of pipeline results
 create_wd $wd &&
@@ -310,6 +312,8 @@ echo "Data to proccess: " $R1_file $R2_file  >> $report
 
 ## START PIPELINE
 
-trimming && assembly && quality_asm && cps_serotyping && sequence_typing
+#trimming && assembly && quality_asm && cps_serotyping && sequence_typing
+
+update_MLST_db
 
 echo "Finished"

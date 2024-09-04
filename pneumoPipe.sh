@@ -3,7 +3,7 @@
 #Default values
 threads=4
 output_dir="pneumoPipe_out"
-wd="./pneumoPipe_out"
+wd="."
 k=51
 scaled=100
 busco_dataset="lactobacillales_odb10"
@@ -210,7 +210,7 @@ quality_asm (){
     echo " "
     echo "Step 3: Quality assessment of assembly produced using QUAST, BUSCO, Kraken2 and sourmash"
     echo " "
-echo "This step will take some minutes..."      
+    echo "This step will take some minutes..."      
     
     ## BUSCO UNICYCLER
     echo "Running BUSCO"

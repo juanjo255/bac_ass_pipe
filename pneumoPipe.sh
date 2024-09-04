@@ -3,7 +3,7 @@
 #Default values
 threads=4
 output_dir="pneumoPipe_out"
-wd="."
+wd="./"
 k=51
 scaled=100
 busco_dataset="lactobacillales_odb10"
@@ -32,7 +32,8 @@ pneumoPipe_help() {
     
     Optional:
         -t        Threads. [4].
-        -w        Working directory. Path to create the folder which will contain all mitnanex information. [./pneumoPipe_out].
+        -w        Working directory. Path to create the folder which will contain all mitnanex information. ['.'].
+        -o        Output directory name. ["pneumoPipe_out"]
         -f        FastP options. [' '].
         -n        Different output directory. Create a different output directory every run (it uses the date and time). [False].
         -u        Update MLST and cgMLST database. Otherwise it will assume you have both databases correctly set. [False]

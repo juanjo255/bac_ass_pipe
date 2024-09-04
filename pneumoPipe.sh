@@ -280,7 +280,7 @@ sequence_typing (){
 
     allelic_call=$wd"/allelic_call"
     ## Alellic calling
-    chewBBACA.py AlleleCall -i $unicycler_asm -g $cgMLST_scheme -o $allelic_call
+    chewBBACA.py AlleleCall -i $unicycler_asm -g $cgMLST_scheme -o $allelic_call --cpu $threads
 
 }
 

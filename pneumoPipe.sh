@@ -169,9 +169,10 @@ assembly (){
     
     ## Create output folders
     #create_wd $wd"skesa_asm"
-    create_wd $wd"unicycler_asm"
+    unicycler_asm=$wd"unicycler_asm"
+    create_wd $unicycler_asm
 
-    unicycler --verbosity 0 -t $threads -1 $R1_file -2 $R2_file -o $wd"/unicycler_asm" >> $wd"/pneumoPipe.log"
+    unicycler --verbosity 0 -t $threads -1 $R1_file -2 $R2_file -o $unicycler_asm >> $wd"/pneumoPipe.log"
     #skesa --reads $R1_file,$R2_file --cores $threads --memory $memory --contigs_out $wd"skesa_asm/assembly_skesa.fasta"
 }
 
@@ -186,7 +187,7 @@ run_sourmash(){
     ## Signature for query
     echo ""
     echo "Creating query signature"
-    sourmash sketch dna -f -p k=$k,scaled=$scaled --outdir $outdir_query $wd"/unicycler_asm/assembly.fasta" 2>> $wd"/pneumoPipe.log" &&
+    sourmash sketch dna -f -p k=$k,scaled=$scaled --outdir $outdir_query $unicycler_asm"/assembly.fasta" 2>> $wd"/pneumoPipe.log" &&
     echo "Sourmash signature for query is at: "$outdir_query
 
     ## Signature for reference
@@ -213,7 +214,7 @@ echo "This step will take some minutes..."
     
     ## BUSCO UNICYCLER
     echo "Running BUSCO"
-    busco -f -c $threads -m genome -l $busco_dataset -i $wd"/unicycler_asm/assembly.fasta" --metaeuk -o $wd"/unicycler_asm/busco_assessment" >> $wd"/pneumoPipe.log" &&
+    busco -f -c $threads -m genome -l $busco_dataset -i $unicycler_asm"/assembly.fasta" --metaeuk -o $unicycler_asm"/busco_assessment" >> $wd"/pneumoPipe.log" &&
     ## BUSCO SKESA
     #busco -f -c $threads -m genome -l lactobacillales_odb10 -i $wd"/unicycler_asm/assembly_skesa.fasta" --metaeuk -o $wd"skesa_asm/busco_assessment"
 
@@ -236,7 +237,7 @@ echo "This step will take some minutes..."
     ## QUAST
     echo "Running Quast"
     quast --circos --plots-format "png" -t $threads -r $reference --features "GFF:"$reference_feature -1 $R1_file -2 $R2_file \
-        -o $wd"/quast_assess" $wd"/unicycler_asm/assembly.fasta" 2>> $wd"/pneumoPipe.log"
+        -o $wd"/quast_assess" $unicycler_asm"/assembly.fasta" 2>> $wd"/pneumoPipe.log"
 }
 
 cps_serotyping (){
@@ -266,13 +267,19 @@ sequence_typing (){
     fi
 
     ## Classic MLST
-    mlst --quiet --scheme "spneumoniae" --threads $threads $wd"/unicycler_asm/assembly.fasta" > $wd"MLST.tsv"
+    mlst --quiet --scheme "spneumoniae" --threads $threads $unicycler_asm"/assembly.fasta" > $wd"MLST.tsv"
     cat $wd"MLST.tsv" >> $report
 
     ## cgMLST
-    chewBBACA.py PrepExternalSchema -g $path_to_scheme -o /path/to/OutputFolder --cpu $threads
+    cgMLST_scheme=$wd"/cgMLST_scheme"
+    create_wd $cgMLST_scheme
+    
+    ## Prepare cgMLST scheme
+    chewBBACA.py PrepExternalSchema -g $path_to_scheme -o $cgMLST_scheme --cpu $threads
 
-
+    allelic_call=$wd"/allelic_call"
+    ## Alellic calling
+    #chewBBACA.py AlleleCall -i $unicycler_asm -g $cgMLST_scheme -o $allelic_call
 
 }
 

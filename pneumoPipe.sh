@@ -259,7 +259,7 @@ cps_serotyping (){
 sequence_typing (){
     
     echo " "
-    echo "Sequence typing using classic MLST and  cgMLST"
+    echo "Sequence typing using classic MLST and cgMLST"
 
     ## If user decide to update database
     if [ -z $update_MLST ];
@@ -272,7 +272,7 @@ sequence_typing (){
     cat $wd"MLST.tsv" >> $report
 
     ## cgMLST
-    cgMLST_scheme=$wd"/cgMLST_scheme"
+    cgMLST_scheme=$wd"/cgMLST_scheme_chewBBACCA"
     create_wd $cgMLST_scheme
     
     ## Prepare cgMLST scheme
@@ -280,7 +280,7 @@ sequence_typing (){
 
     allelic_call=$wd"/allelic_call"
     ## Alellic calling
-    #chewBBACA.py AlleleCall -i $unicycler_asm -g $cgMLST_scheme -o $allelic_call
+    chewBBACA.py AlleleCall -i $unicycler_asm -g $cgMLST_scheme -o $allelic_call
 
 }
 

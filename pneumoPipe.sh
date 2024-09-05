@@ -312,7 +312,7 @@ echo "Data to proccess: " $R1_file $R2_file  >> $report
 # FIXME 
 # This part could generate problems, I am trying just to get the executable path to locate other folders
 if which pneumoPipe.sh > /dev/null 2>&1; then
-    ## This wont work for a while I guess
+    ## This wont work for a while I guess. This is thought for a wet dream of using in anaconda or nextflow
     exec_path=$(grep -o ".*/" $(which pneumoPipe.sh))
 else
     if [ "$(grep -o "/" <<< $0 | wc -l)" -gt 0 ]; then

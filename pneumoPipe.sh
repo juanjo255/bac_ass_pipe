@@ -142,12 +142,12 @@ if [ -d $path_to_scheme"/scheme_alleles_spneumoniae" ];
         echo "Downloading cgMLST scheme fo S. pneumoniae"
         echo " " 
         update_MLST_db
-    fi
+fi
 
 
 ##### FUNCTIONS #####
 create_wd(){
-## CREATE WORKING DIRECTORY
+    ## CREATE WORKING DIRECTORY
     ## Check if output directory exists
     if [ -d $1 ];
     then
@@ -188,12 +188,12 @@ assembly (){
     echo "Step 2: Assemblying with Unicycler"
     
     ## Create output folders
-    #create_wd $wd"skesa_asm"
     unicycler_asm=$wd"unicycler_asm"
     create_wd $unicycler_asm
 
     unicycler --verbosity 0 -t $threads -1 $R1_file -2 $R2_file -o $unicycler_asm >> $log
-    #skesa --reads $R1_file,$R2_file --cores $threads --memory $memory --contigs_out $wd"skesa_asm/assembly_skesa.fasta"
+    unicycler_asm_fasta=$unicycler_asm"/"$prefix1".fasta"
+    mv $unicycler_asm_fasta $unicycler_asm_fasta
 }
 
 run_sourmash(){
@@ -207,7 +207,7 @@ run_sourmash(){
     ## Signature for query
     echo ""
     echo "Creating query signature"
-    sourmash sketch dna -f -p k=$k,scaled=$scaled --outdir $outdir_query $unicycler_asm"/assembly.fasta" 2>> $log &&
+    sourmash sketch dna -f -p k=$k,scaled=$scaled --outdir $outdir_query $unicycler_asm_fasta 2>> $log &&
     echo "Sourmash signature for query is at: "$outdir_query
 
     ## Signature for reference
@@ -234,9 +234,7 @@ quality_asm (){
     
     ## BUSCO UNICYCLER
     echo "Running BUSCO"
-    busco -f -c $threads -m genome --download_path $path_to_busco_dataset -l $busco_dataset -i $unicycler_asm"/assembly.fasta" --metaeuk -o $unicycler_asm"/busco_assessment" >> $log &&
-    ## BUSCO SKESA
-    #busco -f -c $threads -m genome -l lactobacillales_odb10 -i $wd"/unicycler_asm/assembly_skesa.fasta" --metaeuk -o $wd"skesa_asm/busco_assessment"
+    busco -f -c $threads -m genome --download_path $path_to_busco_dataset -l $busco_dataset -i $unicycler_asm_fasta --metaeuk -o $unicycler_asm"/busco_assessment" >> $log &&
 
     ## SOURMASH
     echo "Running Sourmash"
@@ -257,7 +255,7 @@ quality_asm (){
     ## QUAST
     echo "Running Quast"
     quast --circos --plots-format "png" -t $threads -r $reference --features "GFF:"$reference_feature -1 $R1_file -2 $R2_file \
-        -o $wd"/quast_assess" $unicycler_asm"/assembly.fasta" 2>> $log
+        -o $wd"/quast_assess" $unicycler_asm_fasta 2>> $log
 }
 
 cps_serotyping (){
@@ -289,7 +287,7 @@ sequence_typing (){
     ## Classic MLST
     echo " "
     echo "Starting classic MLST"
-    mlst --quiet --scheme "spneumoniae" --threads $threads $unicycler_asm"/assembly.fasta" > $wd"MLST.tsv"
+    mlst --quiet --scheme "spneumoniae" --threads $threads $unicycler_asm_fasta > $wd"MLST.tsv"
     cat $wd"MLST.tsv" >> $report
 
     ## cgMLST
@@ -334,7 +332,6 @@ echo "Data to proccess: " $R1_file $R2_file  >> $report
 
 
 ## START PIPELINE
-
 
 ## Executable path
 # FIXME 

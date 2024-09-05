@@ -7,8 +7,8 @@ wd=$(pwd)
 k=51
 scaled=100
 busco_dataset="lactobacillales_odb10"
-path_to_scheme=$(grep -o ".*/" <<< $wd)
-path_to_busco_dataset=$(grep -o ".*/" <<< $wd)
+path_to_scheme=$wd
+path_to_busco_dataset=$wd
 
 ## Help message
 pneumoPipe_help() {
@@ -319,7 +319,7 @@ update_MLST_db () {
     
     echo "Updating the cgMLST"
     bash $exec_path"/pneumoSchemeLoci/download_schemes_spneumoniae.sh" $path_to_scheme
-    echo "Files were downloaded one directory before the working directory"
+    echo "Files were downloaded in the working directory"
 }
 
 ## Create report for summary of pipeline results

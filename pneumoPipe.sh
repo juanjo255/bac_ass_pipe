@@ -77,6 +77,9 @@ while getopts '1:2:d:r:t:w:f:nus:' opt; do
         s)
         path_to_scheme=$OPTARG
         ;;
+        b)
+        path_to_busco_dataset=$OPTARG
+        ;;
         *)
         pneumoPipe_help
         ;;

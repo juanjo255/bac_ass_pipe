@@ -3,11 +3,12 @@
 #Default values
 threads=4
 output_dir="pneumoPipe_out"
-wd="./"
+wd=$(pwd)
 k=51
 scaled=100
 busco_dataset="lactobacillales_odb10"
-path_to_scheme=$wd
+path_to_scheme=$(grep -o ".*/" <<< $wd)
+path_to_busco_dataset=$(grep -o ".*/" <<< $wd)
 
 ## Help message
 pneumoPipe_help() {
@@ -32,12 +33,13 @@ pneumoPipe_help() {
     
     Optional:
         -t        Threads. [4].
-        -w        Working directory. Path to create the folder which will contain all mitnanex information. ['.'].
+        -w        Working directory. Path to create the folder which will contain all pneumopipe information. [$wd].
         -o        Output directory name. ["pneumoPipe_out"]
         -f        FastP options. [' '].
         -n        Different output directory. Create a different output directory every run (it uses the date and time). [False].
         -u        Update MLST and cgMLST database. Otherwise it will assume you have both databases correctly set. [False]
-        -s        Path to schemes. [working directory]
+        -s        Path to schemes. [$path_to_scheme]
+        -b        Path to busco datasets. [$path_to_busco_dataset]
         *         Help.
     "
     exit 1
@@ -215,7 +217,7 @@ quality_asm (){
     
     ## BUSCO UNICYCLER
     echo "Running BUSCO"
-    busco -f -c $threads -m genome -l $busco_dataset -i $unicycler_asm"/assembly.fasta" --metaeuk -o $unicycler_asm"/busco_assessment" >> $wd"/pneumoPipe.log" &&
+    busco -f -c $threads -m genome --download_path $path_to_busco_dataset -l $busco_dataset -i $unicycler_asm"/assembly.fasta" --metaeuk -o $unicycler_asm"/busco_assessment" >> $wd"/pneumoPipe.log" &&
     ## BUSCO SKESA
     #busco -f -c $threads -m genome -l lactobacillales_odb10 -i $wd"/unicycler_asm/assembly_skesa.fasta" --metaeuk -o $wd"skesa_asm/busco_assessment"
 
@@ -268,19 +270,23 @@ sequence_typing (){
     fi
 
     ## Classic MLST
+    echo " "
+    echo "Starting classic MLST"
     mlst --quiet --scheme "spneumoniae" --threads $threads $unicycler_asm"/assembly.fasta" > $wd"MLST.tsv"
     cat $wd"MLST.tsv" >> $report
 
     ## cgMLST
+    echo " "
+    echo "Starting cgMLST "
     cgMLST_scheme=$wd"/cgMLST_scheme_chewBBACCA"
     create_wd $cgMLST_scheme
     
     ## Prepare cgMLST scheme
-    chewBBACA.py PrepExternalSchema -g $path_to_scheme -o $cgMLST_scheme --ptf $exec_path"/prodigal_training_files/Streptococcus_pneumoniae.trn" --cpu $threads
+    chewBBACA.py PrepExternalSchema -g $path_to_scheme -o $cgMLST_scheme --ptf $exec_path"/prodigal_training_files/Streptococcus_pneumoniae.trn" --cpu $threads >> $report
 
     allelic_call=$wd"/allelic_call"
     ## Alellic calling
-    chewBBACA.py AlleleCall -i $unicycler_asm -g $cgMLST_scheme -o $allelic_call --cpu $threads --output-novel --output-missing --no-inferred
+    chewBBACA.py AlleleCall -i $unicycler_asm -g $cgMLST_scheme -o $allelic_call --cpu $threads --output-novel --output-missing --no-inferred >> $report
 
 }
 
@@ -288,13 +294,13 @@ update_MLST_db () {
 
     echo " "
     echo "Updating the MLST database"
-    echo " " 
+    echo " "
     mlst-download_pub_mlst -j 5 -d $(echo $(grep -o ".*(?=bin)" <<< $(which mlst))"db/pubmlst")
     mlst-make_blast_db
     
     echo "Updating the cgMLST"
-    bash $exec_path"/pneumoSchemeLoci/download_schemes_spneumoniae.sh" $wd
-    echo "Files were downloaded in the working directory"
+    bash $exec_path"/pneumoSchemeLoci/download_schemes_spneumoniae.sh" $path_to_scheme
+    echo "Files were downloaded one directory before the working directory"
 }
 
 ## Create report for summary of pipeline results

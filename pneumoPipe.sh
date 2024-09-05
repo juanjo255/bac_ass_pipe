@@ -192,7 +192,7 @@ assembly (){
     unicycler_asm=$wd"unicycler_asm"
     create_wd $unicycler_asm
 
-    unicycler --verbosity 0 -t $threads -1 $R1_file -2 $R2_file -o $unicycler_asm >> $wd"/pneumoPipe.log"
+    unicycler --verbosity 0 -t $threads -1 $R1_file -2 $R2_file -o $unicycler_asm >> $log
     #skesa --reads $R1_file,$R2_file --cores $threads --memory $memory --contigs_out $wd"skesa_asm/assembly_skesa.fasta"
 }
 
@@ -207,21 +207,21 @@ run_sourmash(){
     ## Signature for query
     echo ""
     echo "Creating query signature"
-    sourmash sketch dna -f -p k=$k,scaled=$scaled --outdir $outdir_query $unicycler_asm"/assembly.fasta" 2>> $wd"/pneumoPipe.log" &&
+    sourmash sketch dna -f -p k=$k,scaled=$scaled --outdir $outdir_query $unicycler_asm"/assembly.fasta" 2>> $log &&
     echo "Sourmash signature for query is at: "$outdir_query
 
     ## Signature for reference
     echo ""
     echo "Creating references signatures. It might take some minutes"
     sourmash sketch dna -f -p k=$k,scaled=$scaled  --outdir $outdir_ref \
-        $(find $references_genomes_folder -type f -name "*.fna")  2>> $wd"/pneumoPipe.log" &&
+        $(find $references_genomes_folder -type f -name "*.fna")  2>> $log &&
     echo "Sourmash signatures for references are at: "$outdir_ref
 
 
     ## Run search
     echo ""
     echo "Searching query signatures in reference signatures"
-    sourmash search --containment -k $k $outdir_query"assembly.fasta.sig" $outdir_ref -o $outdir_query"/sourmash_out.csv" 2>> $wd"/pneumoPipe.log"
+    sourmash search --containment -k $k $outdir_query"assembly.fasta.sig" $outdir_ref -o $outdir_query"/sourmash_out.csv" 2>> $log
 
 }
 
@@ -234,7 +234,7 @@ quality_asm (){
     
     ## BUSCO UNICYCLER
     echo "Running BUSCO"
-    busco -f -c $threads -m genome --download_path $path_to_busco_dataset -l $busco_dataset -i $unicycler_asm"/assembly.fasta" --metaeuk -o $unicycler_asm"/busco_assessment" >> $wd"/pneumoPipe.log" &&
+    busco -f -c $threads -m genome --download_path $path_to_busco_dataset -l $busco_dataset -i $unicycler_asm"/assembly.fasta" --metaeuk -o $unicycler_asm"/busco_assessment" >> $log &&
     ## BUSCO SKESA
     #busco -f -c $threads -m genome -l lactobacillales_odb10 -i $wd"/unicycler_asm/assembly_skesa.fasta" --metaeuk -o $wd"skesa_asm/busco_assessment"
 
@@ -257,7 +257,7 @@ quality_asm (){
     ## QUAST
     echo "Running Quast"
     quast --circos --plots-format "png" -t $threads -r $reference --features "GFF:"$reference_feature -1 $R1_file -2 $R2_file \
-        -o $wd"/quast_assess" $unicycler_asm"/assembly.fasta" 2>> $wd"/pneumoPipe.log"
+        -o $wd"/quast_assess" $unicycler_asm"/assembly.fasta" 2>> $log
 }
 
 cps_serotyping (){
@@ -295,17 +295,19 @@ sequence_typing (){
     ## cgMLST
     echo " "
     echo "Starting cgMLST "
-    cgMLST_scheme=$wd"/cgMLST_scheme_chewBBACCA"
-    create_wd $cgMLST_scheme
-    
-    ## Prepare cgMLST scheme
-    chewBBACA.py PrepExternalSchema -g $path_to_scheme -o $cgMLST_scheme \
-        --ptf $exec_path"/prodigal_training_files/Streptococcus_pneumoniae.trn" --cpu $threads >> $report
 
-    allelic_call=$wd"/allelic_call"
+    ## Prepare cgMLST scheme
+    cgMLST_scheme=$wd"/cgMLST_scheme_chewBBACCA"
+    chewBBACA.py PrepExternalSchema -g $path_to_scheme -o $cgMLST_scheme \
+        --ptf $exec_path"/prodigal_training_files/Streptococcus_pneumoniae.trn" --cpu $threads >> $log
+
     ## Alellic calling
+    allelic_call=$wd"/allelic_call"
     chewBBACA.py AlleleCall -i $unicycler_asm -g $cgMLST_scheme -o $allelic_call --cpu $threads \
-        --output-novel --output-missing --no-inferred >> $report
+        --output-novel --output-missing --no-inferred >> $log
+
+    ## Add to report
+    cat $allelic_call"/results_statistics.tsv" >> $report
 
 }
 
@@ -325,6 +327,7 @@ update_MLST_db () {
 ## Create report for summary of pipeline results
 create_wd $wd &&
 report=$wd"report.txt"
+log=$log
 touch $report
 echo "-------------------------" >> $report
 echo "Data to proccess: " $R1_file $R2_file  >> $report

@@ -276,7 +276,7 @@ sequence_typing (){
     create_wd $cgMLST_scheme
     
     ## Prepare cgMLST scheme
-    chewBBACA.py PrepExternalSchema -g $path_to_scheme -o $cgMLST_scheme --cpu $threads
+    chewBBACA.py PrepExternalSchema -g $path_to_scheme -o $cgMLST_scheme --ptf $exec_path"/prodigal_training_files/Streptococcus_pneumoniae.trn" --cpu $threads
 
     allelic_call=$wd"/allelic_call"
     ## Alellic calling
@@ -291,19 +291,6 @@ update_MLST_db () {
     echo " " 
     mlst-download_pub_mlst -j 5 -d $(echo $(grep -o ".*(?=bin)" <<< $(which mlst))"db/pubmlst")
     mlst-make_blast_db
-
-    # FIXME 
-    # This part could generate problems, I am trying just to get the executable path to locate other folder
-    if which pneumoPipe.sh > /dev/null 2>&1; then
-        ## This wont work for a while I guess
-        exec_path=$(grep -o ".*/" $(which pneumoPipe.sh))
-    else
-        if [ "$(grep -o "/" <<< $0 | wc -l)" -gt 0 ]; then
-            exec_path=$(grep -o ".*/" <<< $0)
-        else
-            exec_path="./"
-        fi
-    fi
     
     echo "Updating the cgMLST"
     bash $exec_path"/pneumoSchemeLoci/download_schemes_spneumoniae.sh" $wd
@@ -319,6 +306,21 @@ echo "Data to proccess: " $R1_file $R2_file  >> $report
 
 
 ## START PIPELINE
+
+
+## Executable path
+# FIXME 
+# This part could generate problems, I am trying just to get the executable path to locate other folders
+if which pneumoPipe.sh > /dev/null 2>&1; then
+    ## This wont work for a while I guess
+    exec_path=$(grep -o ".*/" $(which pneumoPipe.sh))
+else
+    if [ "$(grep -o "/" <<< $0 | wc -l)" -gt 0 ]; then
+        exec_path=$(grep -o ".*/" <<< $0)
+    else
+        exec_path="./"
+    fi
+fi
 
 #trimming && assembly && quality_asm && cps_serotyping && sequence_typing
 

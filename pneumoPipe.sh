@@ -131,6 +131,20 @@ else
     wd=$wd"/"$output_dir
 fi
 
+if [ -d $path_to_scheme"/scheme_alleles_spneumoniae" ];
+    then
+        echo " "
+        echo "Directory with cgMLST scheme exists. Skipping downloading database"
+        echo " "
+    else 
+        mkdir "cgMLST scheme were not found at" $path_to_scheme
+        echo " "
+        echo "Downloading cgMLST scheme fo S. pneumoniae"
+        echo " " 
+        update_MLST_db
+    fi
+
+
 ##### FUNCTIONS #####
 create_wd(){
 ## CREATE WORKING DIRECTORY
@@ -285,11 +299,13 @@ sequence_typing (){
     create_wd $cgMLST_scheme
     
     ## Prepare cgMLST scheme
-    chewBBACA.py PrepExternalSchema -g $path_to_scheme -o $cgMLST_scheme --ptf $exec_path"/prodigal_training_files/Streptococcus_pneumoniae.trn" --cpu $threads >> $report
+    chewBBACA.py PrepExternalSchema -g $path_to_scheme -o $cgMLST_scheme \
+        --ptf $exec_path"/prodigal_training_files/Streptococcus_pneumoniae.trn" --cpu $threads >> $report
 
     allelic_call=$wd"/allelic_call"
     ## Alellic calling
-    chewBBACA.py AlleleCall -i $unicycler_asm -g $cgMLST_scheme -o $allelic_call --cpu $threads --output-novel --output-missing --no-inferred >> $report
+    chewBBACA.py AlleleCall -i $unicycler_asm -g $cgMLST_scheme -o $allelic_call --cpu $threads \
+        --output-novel --output-missing --no-inferred >> $report
 
 }
 

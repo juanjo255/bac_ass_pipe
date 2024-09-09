@@ -7,7 +7,7 @@ wd=$(pwd)
 k=51
 scaled=100
 busco_dataset="lactobacillales_odb10"
-path_to_scheme=$wd
+path_to_scheme=$wd"/scheme_alleles_spneumoniae"
 path_to_busco_dataset=$wd
 
 ## Help message
@@ -21,20 +21,26 @@ pneumoPipe_help() {
 
     Version: 0.1
 
-    Usage: pneumoPipe.sh [options] -1 reads_R1.fastq -2 reads_R2.fastq
+    Usage: 
+    pneumoPipe.sh [options] -1 reads_R1.fastq -2 reads_R2.fastq
+    OR
+    pneumoPipe.sh [options] -3 path/to/dir/Reads
+
+    
 
     Options:    
     Required:
 
         -1        Input R1 paired end file. [required].
         -2        Input R2 paired end file. [required].
+        -3        Path to R1 and R2 files. [required].
         -d        Kraken database. if you do not have one, you need to create it first.
         -r        Reference genomes folder. This is to get the closest genome in the NCBI for a better genome quality analysis.
     
     Optional:
         -t        Threads. [4].
         -w        Working directory. Path to create the folder which will contain all pneumopipe information. [$wd].
-        -o        Output directory name. ["pneumoPipe_out"]
+        -o        Output directory name. If -3 option was given a new output dir name will be assigned using reads name, otherwise default. [$output_dir]
         -f        FastP options. [' '].
         -n        Different output directory. Create a different output directory every run (it uses the date and time). [False].
         -u        Update MLST and cgMLST database. Otherwise it will assume you have both databases correctly set. [False]
@@ -45,13 +51,16 @@ pneumoPipe_help() {
     exit 1
 }
 
-while getopts '1:2:d:r:t:w:f:nus:' opt; do
+while getopts '1:2:3:d:r:t:w:f:nus:' opt; do
     case $opt in
         1)
         R1_file=$OPTARG
         ;;
         2)
         R2_file=$OPTARG
+        ;;
+        3)
+        path_to_dir_paired=$OPTARG
         ;;
         d)
         kraken_db=$OPTARG
@@ -112,17 +121,12 @@ then
 fi
 
 ## PREFIX name to use for the resulting files
-if [ -z $prefix1 ];
-then 
-    prefix1=$(basename $R1_file)
-    prefix1=${prefix1%%.*}
-fi
-
-if [ -z $prefix2 ];
-then 
-    prefix2=$(basename $R2_file)
-    prefix2=${prefix2%%.*}
-fi
+set_name_for_outfiles(){
+        prefix1=$(basename $R1_file)
+        prefix1=${prefix1%%.*}
+        prefix2=$(basename $R2_file)
+        prefix2=${prefix2%%.*}
+}
 
 if [ ${wd: -1} = / ];
 then 
@@ -131,7 +135,7 @@ else
     wd=$wd"/"$output_dir
 fi
 
-if [ -d $path_to_scheme"/scheme_alleles_spneumoniae" ];
+if [ -d $path_to_scheme ];
     then
         echo " "
         echo "Directory with cgMLST scheme exists. Skipping downloading database"
@@ -323,13 +327,22 @@ update_MLST_db () {
 }
 
 ## Create report for summary of pipeline results
-create_wd $wd &&
-report=$wd"report.txt"
-log=$log
-touch $report
-echo "-------------------------" >> $report
-echo "Data to proccess: " $R1_file $R2_file  >> $report
+create_report () {
 
+    create_wd $wd &&
+    report=$wd"/report.txt"
+    log=$wd"/log.txt"
+    touch $report $log
+    echo "-------------------------" >> $report
+    echo "Data to proccess: " $R1_file $R2_file  >> $report
+}
+
+## Pipeline execution order
+pipeline_exec(){
+
+    #trimming && assembly && quality_asm && cps_serotyping && sequence_typing
+    update_MLST_db
+}
 
 ## START PIPELINE
 
@@ -347,8 +360,42 @@ else
     fi
 fi
 
-#trimming && assembly && quality_asm && cps_serotyping && sequence_typing
 
-update_MLST_db
+## Check if files or directory with files was given
+## Check required files are available
+if ! [ -z "$path_to_dir_paired" ];
+then
+    # I must attach to wd a new folder for each read
+    # Here I save the common wd. I could use dirname, but this way is headache-free
+    keep_wd_body=$wd
+    for i in $(find $path_to_dir_paired -name *.fastq* | grep -o ".*R1\..*")
+    do
+        echo "running PneumoPipe for"  $(basename $i)
+        R1_file=$i
+        R2_file=$(echo "$i" | sed 's/R1/R2/')
+
+        # Asign a name for the dir base on the reads name
+        read_name=$(basename $R1_file)
+        output_dir="${read_name%_*}/"
+
+        # RUN MAUS
+        set_name_for_outfiles
+        wd=$keep_wd_body$output_dir
+        create_wd $wd &&
+        echo "results will be saved at" $wd
+        create_report
+        pipeline_exec
+        
+    done
+else
+    if [ -z "$R1_file" ]; then echo "ERROR => File 1 is missing"; MAUS_help; fi
+    if [ -z "$R2_file" ]; then echo "ERROR => File 2 is missing"; MAUS_help; fi
+    
+    set_name_for_outfiles
+    create_wd $wd$output_dir &&
+    wd=$wd$output_dir
+    create_report
+    pipeline_exec
+fi
 
 echo "Finished"

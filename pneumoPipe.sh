@@ -378,7 +378,7 @@ then
         read_name=$(basename $R1_file)
         output_dir="${read_name%_*}/"
 
-        # RUN MAUS
+        # RUN pneumoPipe
         set_name_for_outfiles
         wd=$keep_wd_body$output_dir
         create_wd $wd &&
@@ -388,8 +388,8 @@ then
         
     done
 else
-    if [ -z "$R1_file" ]; then echo "ERROR => File 1 is missing"; MAUS_help; fi
-    if [ -z "$R2_file" ]; then echo "ERROR => File 2 is missing"; MAUS_help; fi
+    if [ -z "$R1_file" ]; then echo "ERROR => File 1 is missing"; pneumoPipe_help; fi
+    if [ -z "$R2_file" ]; then echo "ERROR => File 2 is missing"; pneumoPipe_help; fi
     
     set_name_for_outfiles
     create_wd $wd$output_dir &&

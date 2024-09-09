@@ -284,7 +284,7 @@ cps_serotyping (){
 sequence_typing (){
     
     echo " "
-    echo "Sequence typing using classic MLST and cgMLST"
+    echo "Step 5: Sequence typing using classic MLST and cgMLST"
 
 
     ## Classic MLST

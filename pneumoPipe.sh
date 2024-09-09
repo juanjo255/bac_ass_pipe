@@ -135,6 +135,22 @@ else
     wd=$wd"/"$output_dir
 fi
 
+## If user decide to update database
+if [ -z $update_MLST ];
+then
+    if [ -d $path_to_scheme ];
+    then
+        echo " "
+        echo "Directory with cgMLST scheme exists. Skipping downloading database"
+        echo " "
+    else 
+        mkdir "cgMLST scheme were not found at" $path_to_scheme
+        echo " "
+        echo "Downloading cgMLST scheme fo S. pneumoniae"
+        echo " " 
+        update_MLST_db
+    fi
+fi
 
 
 ##### FUNCTIONS #####
@@ -270,23 +286,6 @@ sequence_typing (){
     echo " "
     echo "Sequence typing using classic MLST and cgMLST"
 
-    ## If user decide to update database
-    if [ -z $update_MLST ];
-    then
-
-        if [ -d $path_to_scheme ];
-        then
-            echo " "
-            echo "Directory with cgMLST scheme exists. Skipping downloading database"
-            echo " "
-        else 
-            mkdir "cgMLST scheme were not found at" $path_to_scheme
-            echo " "
-            echo "Downloading cgMLST scheme fo S. pneumoniae"
-            echo " " 
-            update_MLST_db
-        fi
-    fi
 
     ## Classic MLST
     echo " "

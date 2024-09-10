@@ -95,18 +95,6 @@ while getopts '1:2:3:d:r:t:w:f:nus:' opt; do
     esac 
 done
 
-# Check if required arguments are provided
-if [ -z $R1_file ];
-then
-  echo "Error: Input R1 file is required."
-  pneumoPipe_help
-fi
-
-if [ -z $R2_file ];
-then
-  echo "Error: Input R2 file is required."
-  pneumoPipe_help
-fi
 
 # if [ -z $kraken_db ];
 # then

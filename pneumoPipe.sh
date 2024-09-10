@@ -1,5 +1,19 @@
 #!/bin/bash
 
+## Executable path
+# FIXME 
+# This part could generate problems, I am trying just to get the executable path to locate other folders
+if which pneumoPipe.sh > /dev/null 2>&1; then
+    ## This wont work for a while I guess. This is thought for a wet dream of using in anaconda or nextflow
+    exec_path=$(grep -o ".*/" $(which pneumoPipe.sh))
+else
+    if [ "$(grep -o "/" <<< $0 | wc -l)" -gt 0 ]; then
+        exec_path=$(grep -o ".*/" <<< $0)
+    else
+        exec_path="./"
+    fi
+fi
+
 #Default values
 threads=4
 output_dir="pneumoPipe_out"
@@ -9,6 +23,7 @@ scaled=100
 busco_dataset="lactobacillales_odb10"
 path_to_scheme=$wd"/scheme_alleles_spneumoniae/"
 path_to_busco_dataset=$wd
+train_file_pyrodigal=$exec_path"/prodiga_training_files/prodigal_training_files/Streptococcus_pneumoniae.trn"
 
 ## Help message
 pneumoPipe_help() {
@@ -46,12 +61,13 @@ pneumoPipe_help() {
         -u        Update MLST and cgMLST database. Otherwise it will assume you have both databases correctly set. [False]
         -s        Path to schemes. [$path_to_scheme]
         -b        Path to busco datasets. [$path_to_busco_dataset]
+        -p        Training file for pyrodigal. [$train_file_pyrodigal]. 
         *         Help.
     "
     exit 1
 }
 
-while getopts '1:2:3:d:r:t:w:f:nus:' opt; do
+while getopts '1:2:3:d:r:t:w:o:f:nus:b:p:' opt; do
     case $opt in
         1)
         R1_file=$OPTARG
@@ -88,6 +104,9 @@ while getopts '1:2:3:d:r:t:w:f:nus:' opt; do
         ;;
         b)
         path_to_busco_dataset=$OPTARG
+        ;;
+         p)
+        train_file_pyrodigal=$OPTARG
         ;;
         *)
         pneumoPipe_help
@@ -320,7 +339,7 @@ CDS_prediction (){
     pyrodigal_outdir=$wd"/cds_pred_pyrodigal"
     create_wd $pyrodigal_outdir
 
-    pyrodigal -j $threads -t $exec_path"/prodiga_training_files/prodigal_training_files/Streptococcus_pneumoniae.trn" \
+    pyrodigal -j $threads -t $train_file_pyrodigal \
         -i $unicycler_asm_fasta -f "gff" -o $pyrodigal_outdir"/genes.gff" -p "single"
 
     ## Extract CDS with gff using AGAT
@@ -351,19 +370,7 @@ pipeline_exec(){
 
 ## START PIPELINE
 
-## Executable path
-# FIXME 
-# This part could generate problems, I am trying just to get the executable path to locate other folders
-if which pneumoPipe.sh > /dev/null 2>&1; then
-    ## This wont work for a while I guess. This is thought for a wet dream of using in anaconda or nextflow
-    exec_path=$(grep -o ".*/" $(which pneumoPipe.sh))
-else
-    if [ "$(grep -o "/" <<< $0 | wc -l)" -gt 0 ]; then
-        exec_path=$(grep -o ".*/" <<< $0)
-    else
-        exec_path="./"
-    fi
-fi
+
 
 ## Check if files or directory with files was given
 ## Check required files are available

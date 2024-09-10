@@ -314,11 +314,15 @@ update_MLST_db () {
 ## Create report for summary of pipeline results
 create_report () {
 
-    create_wd $wd &&
+    create_wd $1 &&
     report=$wd"/report.txt"
     log=$wd"/log.txt"
     touch $report $log
-    echo "-------------------------" >> $report
+    echo "-------------------------------------"
+    echo "Data to proccess: " $R1_file $R2_file 
+
+    # To report
+    echo "--------------------------------------" >> $report
     echo "Data to proccess: " $R1_file $R2_file  >> $report
 }
 
@@ -365,9 +369,8 @@ then
         # RUN pneumoPipe
         set_name_for_outfiles
         wd=$keep_wd_body$output_dir
-        create_wd $wd &&
+        create_report $wd && 
         echo "results will be saved at" $wd
-        create_report
         pipeline_exec
         
     done
@@ -376,9 +379,9 @@ else
     if [ -z "$R2_file" ]; then echo "ERROR => File 2 is missing"; pneumoPipe_help; fi
     
     set_name_for_outfiles
-    create_wd $wd$output_dir &&
     wd=$wd$output_dir
-    create_report
+    create_report $wd &&
+    echo "results will be saved at" $wd
     pipeline_exec
 fi
 

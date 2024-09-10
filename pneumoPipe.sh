@@ -116,11 +116,9 @@ set_name_for_outfiles(){
         prefix2=${prefix2%%.*}
 }
 
-if [ ${wd: -1} = / ];
+if [ ${wd: -1} != / ];
 then 
-    wd=$wd$output_dir
-else
-    wd=$wd"/"$output_dir
+    wd=$wd"/"
 fi
 
 ## If user decide to update database
@@ -354,7 +352,7 @@ then
     # I must attach to wd a new folder for each read
     # Here I save the common wd. I could use dirname, but this way is headache-free
     keep_wd_body=$wd
-    for i in $(find $path_to_dir_paired -name *.fastq* | grep -o ".*R1\..*")
+    for i in $(find $path_to_dir_paired -name "*.fastq*" | grep -o ".*R1\..*")
     do
         echo "running PneumoPipe for"  $(basename $i)
         R1_file=$i

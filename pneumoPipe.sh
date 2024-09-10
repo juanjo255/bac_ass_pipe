@@ -7,7 +7,7 @@ wd=$(pwd)
 k=51
 scaled=100
 busco_dataset="lactobacillales_odb10"
-path_to_scheme=$wd"/scheme_alleles_spneumoniae"
+path_to_scheme=$wd"/scheme_alleles_spneumoniae/"
 path_to_busco_dataset=$wd
 
 ## Help message

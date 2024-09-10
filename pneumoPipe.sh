@@ -24,6 +24,7 @@ busco_dataset="lactobacillales_odb10"
 path_to_scheme=$wd"/scheme_alleles_spneumoniae/"
 path_to_busco_dataset=$wd
 train_file_pyrodigal=$exec_path"/prodiga_training_files/prodigal_training_files/Streptococcus_pneumoniae.trn"
+unicycler_asm_fasta=$unicycler_asm"/"$prefix1".fasta"
 
 ## Help message
 pneumoPipe_help() {
@@ -197,7 +198,7 @@ trimming(){
 
 }
 
-assembly (){
+assembly(){
     ## Unicycler
     echo "Step 2: Assemblying with Unicycler"
     
@@ -207,7 +208,7 @@ assembly (){
 
     unicycler --verbosity 0 -t $threads -1 $R1_file -2 $R2_file -o $unicycler_asm >> $log
     unicycler_asm_fasta=$unicycler_asm"/"$prefix1".fasta"
-    mv $unicycler_asm_fasta $unicycler_asm_fasta
+    mv $unicycler_asm"/assembly.fasta" $unicycler_asm_fasta
 }
 
 run_sourmash(){
@@ -239,7 +240,7 @@ run_sourmash(){
 
 }
 
-quality_asm (){
+quality_asm(){
     
     echo " "
     echo "Step 3: Quality assessment of assembly produced using QUAST, BUSCO, Kraken2 and sourmash"
@@ -272,7 +273,7 @@ quality_asm (){
         -o $wd"/quast_assess" $unicycler_asm_fasta 2>> $log
 }
 
-cps_serotyping (){
+cps_serotyping(){
 
     echo "Step 4: Capsule serotyping using SeroCall"
     echo " "
@@ -340,9 +341,8 @@ CDS_prediction (){
     create_wd $pyrodigal_outdir
 
     pyrodigal -j $threads -t $train_file_pyrodigal \
-        -i $unicycler_asm_fasta -f "gff" -o $pyrodigal_outdir"/genes.gff" -p "single"
-
-    ## Extract CDS with gff using AGAT
+        -i $unicycler_asm_fasta -f "gff" -o $pyrodigal_outdir"/genes.gff" -d $pyrodigal_outdir"/genes.fasta" -p "single"
+    
 
 }
 

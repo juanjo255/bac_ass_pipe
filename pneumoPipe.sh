@@ -122,6 +122,7 @@ then
 fi
 
 ## If user decide to update database
+## Skip if cgMLST db exists, otherwise download
 if [ -z $update_MLST ];
 then
     if [ -d $path_to_scheme ];
@@ -270,7 +271,7 @@ cps_serotyping (){
 sequence_typing (){
     
     echo " "
-    echo "Step 5: Sequence typing using classic MLST and cgMLST"
+    echo "Step 6: Sequence typing using classic MLST and cgMLST"
 
 
     ## Classic MLST
@@ -290,7 +291,7 @@ sequence_typing (){
 
     ## Alellic calling
     allelic_call=$wd"/allelic_call"
-    chewBBACA.py AlleleCall -i $unicycler_asm -g $cgMLST_scheme -o $allelic_call --cpu $threads \
+    chewBBACA.py AlleleCall -i $unicycler_asm -g $cgMLST_scheme -o $allelic_call --cpu $threads --cds $pyrodigal_outdir"/genes.aa.fasta" \
         --output-novel --output-missing --no-inferred >> $log
 
     ## Add to report
@@ -312,14 +313,19 @@ update_MLST_db () {
 }
 
 CDS_prediction (){
+    ## CDS prediction with pyrodigal
 
+    echo "Step 5: Gene prediction with pyrodigal"
+    echo " "
     pyrodigal_outdir=$wd"/cds_pred_pyrodigal"
     create_wd $pyrodigal_outdir
 
     pyrodigal -j $threads -t $exec_path"/prodiga_training_files/prodigal_training_files/Streptococcus_pneumoniae.trn" \
-        -i $unicycler_asm_fasta -f "gff" -o $pyrodigal_outdir"/genes.gff" -a $pyrodigal_outdir"/genes.aa.fasta" -p "single"
-}
+        -i $unicycler_asm_fasta -f "gff" -o $pyrodigal_outdir"/genes.gff" -p "single"
 
+    ## Extract CDS with gff using AGAT
+
+}
 
 ## Create report for summary of pipeline results
 create_report () {
@@ -339,7 +345,7 @@ create_report () {
 ## Pipeline execution order
 pipeline_exec(){
 
-    #trimming && assembly && quality_asm && cps_serotyping && sequence_typing
+    #trimming && assembly && quality_asm && cps_serotyping && CDS_prediction && sequence_typing
     trimming
 }
 

@@ -303,7 +303,7 @@ update_MLST_db () {
     echo " "
     echo "Updating the MLST database"
     echo " "
-    mlst-download_pub_mlst -j 5 -d $(echo $(grep -o ".*(?=bin)" <<< $(which mlst))"db/pubmlst")
+    mlst-download_pub_mlst -j 5 -d $(echo $(grep -Po ".*(?=bin)" <<< $(which mlst))"db/pubmlst")
     mlst-make_blast_db
     
     echo "Updating the cgMLST"

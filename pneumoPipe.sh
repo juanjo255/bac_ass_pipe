@@ -330,7 +330,7 @@ create_report () {
 pipeline_exec(){
 
     #trimming && assembly && quality_asm && cps_serotyping && sequence_typing
-    update_MLST_db
+    trimming
 }
 
 ## START PIPELINE

@@ -1,6 +1,2 @@
-micromamba install python=3.8 blast=2.15 spades fastp unicycler bwa samtools busco quast fastqc chewbbaca ncbi-amrfinderplus ariba pyrodigal
-pip install sourmash multiqc
-mlst-download_pub_mlst -j 5 -d echo $(grep -oP ".*(?=bin)" <<< $(which mlst))"db/pubmlst"
-mlst-make_blast_db
-curl https://rest.pubmlst.org/db/pubmlst_spneumoniae_seqdef/schemes/2/profiles_csv --output profile_csv
-pneumoSchemeLoci/download_schemes_spneumoniae.sh 
+micromamba install python=3.8 blast=2.15 spades fastp unicycler bwa samtools busco quast fastqc chewbbaca ncbi-amrfinderplus mummer4 pyrodigal
+pip install sourmash multiqc ariba

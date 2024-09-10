@@ -311,8 +311,8 @@ sequence_typing (){
 
     ## Alellic calling
     allelic_call=$wd"/allelic_call"
-    chewBBACA.py AlleleCall -i $unicycler_asm -g $cgMLST_scheme -o $allelic_call --cpu $threads --cds $pyrodigal_outdir"/genes.aa.fasta" \
-        --output-novel --output-missing --no-inferred >> $log
+    chewBBACA.py AlleleCall --cds-input -i $pyrodigal_outdir -g $cgMLST_scheme -o $allelic_call --cpu $threads --cds $pyrodigal_outdir"/genes.aa.fasta" \
+        --output-novel --output-missing --no-inferred  >> $log
 
     ## Add to report
     cat $allelic_call"/results_statistics.tsv" >> $report
@@ -343,7 +343,6 @@ CDS_prediction (){
     pyrodigal -j $threads -t $train_file_pyrodigal \
         -i $unicycler_asm_fasta -f "gff" -o $pyrodigal_outdir"/genes.gff" -d $pyrodigal_outdir"/genes.fasta" -p "single"
     
-
 }
 
 ## Create report for summary of pipeline results
@@ -365,7 +364,7 @@ create_report () {
 pipeline_exec(){
 
     #trimming && assembly && quality_asm && cps_serotyping && CDS_prediction && sequence_typing
-    trimming
+    
 }
 
 ## START PIPELINE

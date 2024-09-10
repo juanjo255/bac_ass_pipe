@@ -209,6 +209,10 @@ assembly(){
     unicycler --verbosity 0 -t $threads -1 $R1_file -2 $R2_file -o $unicycler_asm >> $log
     unicycler_asm_fasta=$unicycler_asm"/"$prefix1".fasta"
     mv $unicycler_asm"/assembly.fasta" $unicycler_asm_fasta
+
+    ## Stats for report
+    asm_stats=$(seqkit stats  -T --all $unicycler_asm_fasta | cut -f 4,5,6,7,8,13,17,18)
+
 }
 
 run_sourmash(){
@@ -256,16 +260,17 @@ quality_asm(){
     run_sourmash &&
     echo ""
     echo "Selecting the most similar reference"
+    
+    ## Add to report later
     reference=$(cut -d "," -f "1,3" $outdir_query"/sourmash_out.csv" | head -n 2 | grep -o "GC[^.]*") &&
     reference=$(find $references_genomes_folder -type f -name $reference"*.fna")
     reference_feature=$(grep -o ".*/" <<< $reference)"genomic.gff" 
     reference_similarity=$(cut -d "," -f "1,3" $outdir_query"/sourmash_out.csv" | head -n 2 | grep -o "^0....")
+
     echo "The selected reference genome is: " $reference
     echo "With a similarity of: " $reference_similarity
     
-    ## Add to report
-    echo "The selected reference genome is: " $reference >> $report
-    echo "With a similarity of: " $reference_similarity >> $report
+    
 
     ## QUAST
     echo "Running Quast"
@@ -283,22 +288,26 @@ cps_serotyping(){
     echo " "
     serocall -t $threads -o $out_serocall"/seroCall" $R1_file $R2_file &&
 
-    ## Add to report
-    echo "cps serotyping" >> $report
-    cat $out_serocall"/seroCall_calls.txt" >> $report
+    ## To report
+    serotype=$(cat $out_serocall"/seroCall_calls.txt" | grep -o "^[0-9].*")
 }
 
 sequence_typing (){
     
     echo " "
     echo "Step 6: Sequence typing using classic MLST and cgMLST"
+    
+    # create dir for MLST and cgMLST
+    mlst_outdir=$wd"/mlst/"
+    create_wd $mlst_outdir
 
 
     ## Classic MLST
     echo " "
     echo "Starting classic MLST"
-    mlst --quiet --scheme "spneumoniae" --threads $threads $unicycler_asm_fasta > $wd"MLST.tsv"
-    cat $wd"MLST.tsv" >> $report
+    
+    mlst --quiet --scheme "spneumoniae" --threads $threads $unicycler_asm_fasta > $mlst_outdir"MLST.tsv"
+    ST=$(cat $mlst_outdir"MLST.tsv" | cut -f 3)
 
     ## cgMLST
     echo " "
@@ -310,12 +319,14 @@ sequence_typing (){
         --ptf $exec_path"/prodigal_training_files/Streptococcus_pneumoniae.trn" --cpu $threads >> $log
 
     ## Alellic calling
-    allelic_call=$wd"/allelic_call"
+    allelic_call=$wd"/allelic_call_chewBBACCA"
     chewBBACA.py AlleleCall --cds-input -i $pyrodigal_outdir -g $cgMLST_scheme -o $allelic_call --cpu $threads --cds $pyrodigal_outdir"/genes.aa.fasta" \
         --output-novel --output-missing --no-inferred  >> $log
 
     ## Add to report
-    cat $allelic_call"/results_statistics.tsv" >> $report
+    ## headers
+    #EXAC INF PLOT3 PLOT5 LOTSC NIPH NIPHEM ALM ASM PAMA LNF Invalid CDSs Classified_CDSs Total_CDSs
+    cgMLST_stats=$(grep -o "\b[0-9].*" $allelic_call"/results_statistics.tsv")
 
 }
 
@@ -355,16 +366,18 @@ create_report () {
     echo "-------------------------------------"
     echo "Data to proccess: " $R1_file $R2_file 
 
-    # To report
-    echo "--------------------------------------" >> $report
-    echo "Data to proccess: " $R1_file $R2_file  >> $report
 }
 
 ## Pipeline execution order
 pipeline_exec(){
 
     #trimming && assembly && quality_asm && cps_serotyping && CDS_prediction && sequence_typing
-    
+
+}
+
+export_report(){
+    #ID referenceID serotype_pctg_similarity ST cgMLSTStats referenceSimilarity assembly statistics
+    echo -e "$prefix1\t$serotype\t$ST\t$cgMLST_stats\t$reference\t$reference_similarity\t$asm_stats" >> $report
 }
 
 ## START PIPELINE

@@ -311,6 +311,16 @@ update_MLST_db () {
     echo "Files were downloaded in the working directory"
 }
 
+CDS_prediction (){
+
+    pyrodigal_outdir=$wd"/cds_pred_pyrodigal"
+    create_wd $pyrodigal_outdir
+
+    pyrodigal -j $threads -t $exec_path"/prodiga_training_files/prodigal_training_files/Streptococcus_pneumoniae.trn" \
+        -i $unicycler_asm_fasta -f "gff" -o $pyrodigal_outdir"/genes.gff" -a $pyrodigal_outdir"/genes.aa.fasta" -p "single"
+}
+
+
 ## Create report for summary of pipeline results
 create_report () {
 

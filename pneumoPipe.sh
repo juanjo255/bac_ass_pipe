@@ -155,7 +155,7 @@ then
         echo " "
         echo "Downloading cgMLST scheme fo S. pneumoniae"
         echo " " 
-        update_MLST_db
+        update_db
     fi
 fi
 
@@ -340,8 +340,8 @@ sequence_typing (){
 
 }
 
-update_MLST_db () {
-    ## Update MLST and cgMLST database
+update_db () {
+    ## Update MLST, cgMLST and AMRFinder database
 
     aesthetics
     echo "Updating the MLST database"
@@ -353,6 +353,10 @@ update_MLST_db () {
     echo "Updating the cgMLST"
     bash $exec_path"/pneumoSchemeLoci/download_schemes_spneumoniae.sh" $path_to_scheme
     echo "Files were downloaded in the working directory"
+
+    ## Update AMRFinder database
+    echo "Updating AMRFinder database"
+    amrfinder -u
 }
 
 CDS_prediction (){
@@ -368,6 +372,15 @@ CDS_prediction (){
     pyrodigal -j $threads -t $train_file_pyrodigal \
         -i $unicycler_asm_fasta -f "gff" -o $pyrodigal_outdir"/genes.gff" -a $pyrodigal_outdir"/genes.aa.fasta" -d $pyrodigal_outdir"/genes.fasta" -p "single"
     
+    ## Headers are wrong in the protein file of prodigal
+    echo "Fixing protein file headers"
+    sed 's/#.*//g; s/>\([^ ]*\)/& ID=\1;/' $pyrodigal_outdir"/genes.aa.fasta" > $pyrodigal_outdir"/genes_fixed.aa.fasta"
+
+}
+
+AMR_and_virulence(){
+    amrfinder --threads $threads --protein $pyrodigal_outdir"/genes.aa.fasta" \
+        --nucleotide $pyrodigal_outdir"/genes.fasta" --gff $pyrodigal_outdir"/genes.gff" --annotation_format "prodigal"
 }
 
 ## Create report for summary of pipeline results

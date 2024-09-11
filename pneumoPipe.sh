@@ -437,7 +437,8 @@ else
     aesthetics
     set_name_for_outfiles
     wd=$wd$output_dir
-    create_report $wd &&
+    create_report
+    create_wd $wd
     echo "results will be saved at" $wd
     pipeline_exec
     export_to_report

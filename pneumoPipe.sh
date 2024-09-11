@@ -324,13 +324,14 @@ sequence_typing (){
         --output-novel --output-missing --no-inferred  >> $log
 
     ## Add to report
-    ## headers
-    #EXAC INF PLOT3 PLOT5 LOTSC NIPH NIPHEM ALM ASM PAMA LNF Invalid CDSs Classified_CDSs Total_CDSs
+    ## Headers
+    ### EXAC INF PLOT3 PLOT5 LOTSC NIPH NIPHEM ALM ASM PAMA LNF Invalid CDSs Classified_CDSs Total_CDSs
     cgMLST_stats=$(grep -o "\b[0-9].*" $allelic_call"/results_statistics.tsv")
 
 }
 
 update_MLST_db () {
+    ## Update MLST and cgMLST database
 
     echo " "
     echo "Updating the MLST database"
@@ -376,8 +377,13 @@ pipeline_exec(){
 }
 
 export_report(){
-    #ID referenceID serotype_pctg_similarity ST cgMLSTStats referenceSimilarity assembly statistics
+    #ReadsID referenceID serotype_pctg_similarity ST cgMLSTStats ReferenceID referenceSimilarity assembly statistics
     echo -e "$prefix1\t$serotype\t$ST\t$cgMLST_stats\t$reference\t$reference_similarity\t$asm_stats" >> $report
+    
+    ## HEADERS ##
+    ##headers=ReadsID referenceID serotype_pctg_similarity ST EXAC INF PLOT3 PLOT5 LOTSC \
+    ## NIPH NIPHEM ALM ASM PAMA LNF Invalid CDSs Classified_CDSs Total_CDSs ReferenceID referenceSimilarity assembly statistics
+
 }
 
 ## START PIPELINE

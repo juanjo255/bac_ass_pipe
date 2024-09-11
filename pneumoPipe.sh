@@ -373,7 +373,7 @@ CDS_prediction (){
         -i $unicycler_asm_fasta -f "gff" -o $pyrodigal_outdir"/genes.gff" -a $pyrodigal_outdir"/genes.aa.fasta" -d $pyrodigal_outdir"/genes.fasta" -p "single"
     
     ## Headers are wrong in the protein file of prodigal
-    echo "Fixing protein file headers"
+    echo "Fixing protein headers"
     sed 's/#.*//g; s/>\([^ ]*\)/& ID=\1;/' $pyrodigal_outdir"/genes.aa.fasta" > $pyrodigal_outdir"/genes_fixed.aa.fasta"
 
 }

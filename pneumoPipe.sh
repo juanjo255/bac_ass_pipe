@@ -161,6 +161,12 @@ fi
 
 
 ##### FUNCTIONS #####
+aesthetics(){
+    echo ""
+    printf '#%.0s' {1..100}
+    echo ""
+}
+
 create_wd(){
     ## CREATE WORKING DIRECTORY
     ## Check if output directory exists
@@ -178,10 +184,10 @@ create_wd(){
 }
 
 trimming(){
-    echo " " 
+    aesthetics
     echo "Step 1: Trimming using fastp"
     echo "FastP options: " $f
-    echo " "
+    aesthetics
 
     fastqc_out=$wd"QC_check"
     create_wd $fastqc_out
@@ -200,8 +206,10 @@ trimming(){
 
 assembly(){
     ## Unicycler
+    aesthetics
     echo "Step 2: Assemblying with Unicycler"
-    
+    aesthetics
+
     ## Create output folders
     unicycler_asm=$wd"unicycler_asm"
     create_wd $unicycler_asm
@@ -246,9 +254,9 @@ run_sourmash(){
 
 quality_asm(){
     
-    echo " "
+    aesthetics
     echo "Step 3: Quality assessment of assembly produced using QUAST, BUSCO, Kraken2 and sourmash"
-    echo " "
+    aesthetics
     echo "This step will take some minutes..."      
     
     ## BUSCO UNICYCLER
@@ -280,8 +288,9 @@ quality_asm(){
 
 cps_serotyping(){
 
+    aesthetics
     echo "Step 4: Capsule serotyping using SeroCall"
-    echo " "
+    aesthetics
 
     out_serocall=$wd"/serotype_seroCall"
     create_wd $out_serocall
@@ -294,9 +303,10 @@ cps_serotyping(){
 
 sequence_typing (){
     
-    echo " "
+    aesthetics
     echo "Step 6: Sequence typing using classic MLST and cgMLST"
-    
+    aesthetics
+
     # create dir for MLST and cgMLST
     mlst_outdir=$wd"/mlst/"
     create_wd $mlst_outdir
@@ -333,9 +343,10 @@ sequence_typing (){
 update_MLST_db () {
     ## Update MLST and cgMLST database
 
-    echo " "
+    aesthetics
     echo "Updating the MLST database"
-    echo " "
+    aesthetics
+
     mlst-download_pub_mlst -j 5 -d $(echo $(grep -Po ".*(?=bin)" <<< $(which mlst))"db/pubmlst")
     mlst-make_blast_db
     
@@ -346,9 +357,11 @@ update_MLST_db () {
 
 CDS_prediction (){
     ## CDS prediction with pyrodigal
-
+    
+    aesthetics
     echo "Step 5: Gene prediction with pyrodigal"
-    echo " "
+    aesthetics
+    
     pyrodigal_outdir=$wd"/cds_pred_pyrodigal"
     create_wd $pyrodigal_outdir
 
@@ -360,12 +373,9 @@ CDS_prediction (){
 ## Create report for summary of pipeline results
 create_report () {
 
-    create_wd $1 &&
     report=$wd"/report.txt"
     log=$wd"/log.txt"
     touch $report $log
-    echo "-------------------------------------"
-    echo "Data to proccess: " $R1_file $R2_file 
 
 }
 
@@ -376,7 +386,7 @@ pipeline_exec(){
 
 }
 
-export_report(){
+export_to_report(){
     #ReadsID referenceID serotype_pctg_similarity ST cgMLSTStats ReferenceID referenceSimilarity assembly statistics
     echo -e "$prefix1\t$serotype\t$ST\t$cgMLST_stats\t$reference\t$reference_similarity\t$asm_stats" >> $report
     
@@ -388,8 +398,6 @@ export_report(){
 
 ## START PIPELINE
 
-
-
 ## Check if files or directory with files was given
 ## Check required files are available
 if ! [ -z "$path_to_dir_paired" ];
@@ -397,12 +405,17 @@ then
     # I must attach to wd a new folder for each read
     # Here I save the common wd. I could use dirname, but this way is headache-free
     keep_wd_body=$wd
+
+    ## Create one report for all samples
+    create_report
     for i in $(find $path_to_dir_paired -name "*.fastq*" | grep -o ".*R1\..*")
     do
-        echo "running PneumoPipe for"  $(basename $i)
         R1_file=$i
         R2_file=$(echo "$i" | sed 's/R1/R2/')
 
+        aesthetics
+        echo "Running pneumoPipe for: " $R1_file $R2_file 
+        aesthetics
         # Asign a name for the dir base on the reads name
         read_name=$(basename $R1_file)
         output_dir="${read_name%_*}/"
@@ -410,20 +423,23 @@ then
         # RUN pneumoPipe
         set_name_for_outfiles
         wd=$keep_wd_body$output_dir
-        create_report $wd && 
+        create_wd $wd
         echo "results will be saved at" $wd
         pipeline_exec
-        
+        export_to_report
     done
 else
     if [ -z "$R1_file" ]; then echo "ERROR => File 1 is missing"; pneumoPipe_help; fi
     if [ -z "$R2_file" ]; then echo "ERROR => File 2 is missing"; pneumoPipe_help; fi
     
+    aesthetics
+    echo "Running pneumoPipe for: " $R1_file $R2_file 
+    aesthetics
     set_name_for_outfiles
     wd=$wd$output_dir
     create_report $wd &&
     echo "results will be saved at" $wd
     pipeline_exec
+    export_to_report
 fi
-
 echo "Finished"

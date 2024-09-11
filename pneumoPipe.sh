@@ -366,7 +366,7 @@ CDS_prediction (){
     create_wd $pyrodigal_outdir
 
     pyrodigal -j $threads -t $train_file_pyrodigal \
-        -i $unicycler_asm_fasta -f "gff" -o $pyrodigal_outdir"/genes.gff" -d $pyrodigal_outdir"/genes.fasta" -p "single"
+        -i $unicycler_asm_fasta -f "gff" -o $pyrodigal_outdir"/genes.gff" -a $pyrodigal_outdir"/genes.aa.fasta" -d $pyrodigal_outdir"/genes.fasta" -p "single"
     
 }
 

@@ -1,2 +1,2 @@
-micromamba install python=3.8 blast=2.15 spades fastp unicycler bwa samtools busco quast fastqc chewbbaca ncbi-amrfinderplus mummer4 pyrodigal
+micromamba install python=3.10 blast=2.15 spades fastp unicycler bwa samtools busco quast fastqc chewbbaca ncbi-amrfinderplus mummer4 pyrodigal
 pip install sourmash multiqc ariba

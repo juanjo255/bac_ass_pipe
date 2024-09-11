@@ -25,6 +25,8 @@ path_to_scheme=$wd"/scheme_alleles_spneumoniae/"
 path_to_busco_dataset=$wd
 train_file_pyrodigal=$exec_path"/prodiga_training_files/prodigal_training_files/Streptococcus_pneumoniae.trn"
 unicycler_asm_fasta=$unicycler_asm"/"$prefix1".fasta"
+ariba_db="card"
+ariba_db_out="card.db"
 
 ## Help message
 pneumoPipe_help() {
@@ -354,9 +356,7 @@ update_db () {
     bash $exec_path"/pneumoSchemeLoci/download_schemes_spneumoniae.sh" $path_to_scheme
     echo "Files were downloaded in the working directory"
 
-    ## Update AMRFinder database
-    echo "Updating AMRFinder database"
-    amrfinder -u
+   
 }
 
 CDS_prediction (){
@@ -379,6 +379,42 @@ CDS_prediction (){
 }
 
 AMR_and_virulence(){
+
+    aesthetics
+    echo "Step 7: AMR and virulence factor annotation using ARIBA and AMRFinderPlus"
+    aesthetics
+
+    ariba_outDir=$wd"/ariba_out/"
+    create_wd $ariba_outDir
+    if [ -f $ariba_outDir$ariba_db_out".fa" && -f $ariba_outDir$ariba_db_out".tsv" ];
+    then
+        echo ""
+        echo "Database for ARIBA exists, skipping download"
+        echo ""
+    else
+        echo ""
+        echo "Downloading " $ariba_db "database"
+        echo ""
+
+        ariba getref $ariba_outDir$ariba_db $ariba_outDir$ariba_db_out
+        ariba prepareref --threads $threads -f $ariba_outDir$ariba_db_out".fa" -m $ariba_outDir$ariba_db_out".tsv" $ariba_outDir"ariba.$ariba_db.prepareref"
+    fi
+
+    echo ""
+    echo "Running ARIBA pipeline"
+    echo ""
+    ariba run $ariba_outDir"ariba.$ariba_db.prepareref" $R1_file $R2_file $ariba_outDir"ariba.run"
+
+
+    ## Update AMRFinder database
+    echo ""
+    echo "trying to update AMRFinder database"
+    echo ""
+    amrfinder -u
+    
+    echo " "
+    echo "Running AMRFinder"
+    echo " " 
     amrfinder --threads $threads --protein $pyrodigal_outdir"/genes.aa.fasta" \
         --nucleotide $pyrodigal_outdir"/genes.fasta" --gff $pyrodigal_outdir"/genes.gff" --annotation_format "prodigal"
 }

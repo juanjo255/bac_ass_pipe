@@ -1,11 +1,29 @@
 #!/bin/bash
 
 ## Update MLST, cgMLST and GPSC db
-wd=$1
-path_to_scheme=$wd"/scheme_alleles_spneumoniae/"
-path_to_GPSC_db=$wd"/GPSC_db/"
+
+while getopts 'w:' opt; do
+    case $opt in
+    w)
+    wd=$OPTARG
+    ;;
+    esac
+done
+
+if [ -z "$wd" ];
+    then 
+    echo "Error option -w for working directory not set"
+    echo "-w  Working directory. Path to download databases and place directories for each sample"
+    exit 1
+fi
+
+## Links
 link_to_GPSC_db="https://gps-project.cog.sanger.ac.uk/GPS_v9.tar.gz"
 link_to_GPSC_meta="https://gps-project.cog.sanger.ac.uk/GPS_v9_external_clusters.csv"
+
+## OutDirs
+path_to_scheme=$wd"/scheme_alleles_spneumoniae/"
+path_to_GPSC_db=$wd"/GPSC_db/"
 ariba_db="card"
 ariba_db_out="card.db"
 ariba_outDir=$wd"/ariba_out/"

@@ -378,7 +378,8 @@ AMR_and_virulence(){
 }
 
 GPSC_assign(){
-
+    poppunk_assign --db $path_to_GPSC_db"GPS_v9" --external-clustering $path_to_GPSC_db"GPS_v9_external_clusters.csv" \
+        --query qfile.txt --output <output folder>
 }
 
 
@@ -399,13 +400,15 @@ pipeline_exec_per_strain(){
 }
 
 export_to_report(){
-    #ReadsID referenceID serotype_pctg_similarity ST cgMLSTStats ReferenceID referenceSimilarity assembly statistics
-    echo -e "$prefix1\t$serotype\t$ST\t$cgMLST_stats\t$reference\t$reference_similarity\t$asm_stats" >> $report
+    #SampleID referenceID serotype_pctg_similarity ST cgMLSTStats ReferenceID referenceSimilarity assembly statistics
+    echo -e "$sampleID\t$serotype\t$ST\t$cgMLST_stats\t$reference\t$reference_similarity\t$asm_stats" >> $report
     
     ## HEADERS ##
     ##headers=ReadsID referenceID serotype_pctg_similarity ST EXAC INF PLOT3 PLOT5 LOTSC \
     ## NIPH NIPHEM ALM ASM PAMA LNF Invalid CDSs Classified_CDSs Total_CDSs ReferenceID referenceSimilarity assembly statistics
 
+    ## This part creates the qfile.txt that popPUNK for GPSC assignemnt needs
+    echo -e "$sampleID\t$unicycler_asm_fasta"
 }
 
 ## START PIPELINE
@@ -425,8 +428,10 @@ then
         R1_file=$i
         R2_file=$(echo "$i" | sed 's/R1/R2/')
 
+        sampleID=$(echo "$i" | sed 's/R1.*//')
+
         aesthetics
-        echo "Running pneumoPipe for: " $R1_file $R2_file 
+        echo "Running pneumoPipe for: " $sampleID
         aesthetics
         # Asign a name for the dir base on the reads name
         read_name=$(basename $R1_file)

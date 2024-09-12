@@ -27,7 +27,7 @@ path_to_GPSC_db=$wd"/GPSC_db/"
 link_to_GPSC_db="https://gps-project.cog.sanger.ac.uk/GPS_v9.tar.gz"
 link_to_GPSC_meta="https://gps-project.cog.sanger.ac.uk/GPS_v9_external_clusters.csv"
 train_file_pyrodigal=$exec_path"/prodiga_training_files/prodigal_training_files/Streptococcus_pneumoniae.trn"
-unicycler_asm_fasta=$unicycler_asm"/"$prefix1".fasta"
+unicycler_outDir_fasta=$unicycler_outDir"/"$prefix1".fasta"
 ariba_db="card"
 ariba_db_out="card.db"
 qfile=$wd"/qfile.txt"
@@ -121,6 +121,23 @@ while getopts '1:2:3:d:r:t:w:o:f:nus:b:p:' opt; do
     esac 
 done
 
+## Add last slash
+if [ ${wd: -1} != / ];
+then 
+    wd=$wd"/"
+fi
+
+## outDIrs
+fastqc_outDir=$wd"QC_check"
+unicycler_outDir=$wd"unicycler_outDir"
+sourmash_outDir_ref=$wd"/reference_genomes_signatures/"
+sourmash_outDir_query=$wd"/sourmash_assess/"
+serocall_outDir=$wd"/serotype_seroCall"
+mlst_outDir=$wd"/mlst/"
+allelic_call_outDir=$wd"/allelic_call_outDir_chewBBACCA"
+pyrodigal_outDir=$wd"/cds_pred_pyrodigal"
+ariba_outDir=$wd"/ariba_out/"
+poppunk_outDir=$wd"/poppunk_out/"
 
 # if [ -z $kraken_db ];
 # then
@@ -141,12 +158,6 @@ set_name_for_outfiles(){
         prefix2=$(basename $R2_file)
         prefix2=${prefix2%%.*}
 }
-
-if [ ${wd: -1} != / ];
-then 
-    wd=$wd"/"
-fi
-
 
 
 ##### FUNCTIONS #####
@@ -178,9 +189,8 @@ trimming(){
     echo "FastP options: " $f
     aesthetics
 
-    fastqc_out=$wd"QC_check"
-    create_wd $fastqc_out
-    fastqc --quiet --threads $threads -o $fastqc_out $R1_file $R2_file
+    create_wd $fastqc_outDir
+    fastqc --quiet --threads $threads -o $fastqc_outDir $R1_file $R2_file
     fastp $f --thread $threads -i $R1_file -I $R2_file -o $wd$prefix1".filt.fastq.gz" -O $wd$prefix2".filt.fastq.gz" \
             -j $wd"fastp.json" -h $wd"fastp.html"
     
@@ -188,8 +198,8 @@ trimming(){
     R1_file=$wd$prefix1".filt.fastq.gz"
     R2_file=$wd$prefix2".filt.fastq.gz"
 
-    fastqc --quiet --threads $threads -o $fastqc_out $R1_file $R2_file
-    multiqc $fastqc_out -o $wd
+    fastqc --quiet --threads $threads -o $fastqc_outDir $R1_file $R2_file
+    multiqc $fastqc_outDir -o $wd
 
 }
 
@@ -200,44 +210,40 @@ assembly(){
     aesthetics
 
     ## Create output folders
-    unicycler_asm=$wd"unicycler_asm"
-    create_wd $unicycler_asm
+    create_wd $unicycler_outDir
 
-    unicycler --verbosity 0 -t $threads -1 $R1_file -2 $R2_file -o $unicycler_asm >> $log
-    unicycler_asm_fasta=$unicycler_asm"/"$prefix1".fasta"
-    mv $unicycler_asm"/assembly.fasta" $unicycler_asm_fasta
+    unicycler --verbosity 0 -t $threads -1 $R1_file -2 $R2_file -o $unicycler_outDir >> $log
+    unicycler_outDir_fasta=$unicycler_outDir"/"$prefix1".fasta"
+    mv $unicycler_outDir"/assembly.fasta" $unicycler_outDir_fasta
 
     ## Stats for report
-    asm_stats=$(seqkit stats  -T --all $unicycler_asm_fasta | cut -f 4,5,6,7,8,13,17,18)
+    asm_stats=$(seqkit stats  -T --all $unicycler_outDir_fasta | cut -f 4,5,6,7,8,13,17,18)
 
 }
 
 run_sourmash(){
 
-    outdir_ref=$wd"/reference_genomes_signatures/"
-    outdir_query=$wd"/sourmash_assess/"
-
-    create_wd $outdir_ref
-    create_wd $outdir_query
+    create_wd $sourmash_outDir_ref
+    create_wd $sourmash_outDir_query
 
     ## Signature for query
     echo ""
     echo "Creating query signature"
-    sourmash sketch dna -f -p k=$k,scaled=$scaled --outdir $outdir_query $unicycler_asm_fasta 2>> $log &&
-    echo "Sourmash signature for query is at: "$outdir_query
+    sourmash sketch dna -f -p k=$k,scaled=$scaled --outdir $sourmash_outDir_query $unicycler_outDir_fasta 2>> $log &&
+    echo "Sourmash signature for query is at: "$sourmash_outDir_query
 
     ## Signature for reference
     echo ""
     echo "Creating references signatures. It might take some minutes"
-    sourmash sketch dna -f -p k=$k,scaled=$scaled  --outdir $outdir_ref \
+    sourmash sketch dna -f -p k=$k,scaled=$scaled  --outdir $sourmash_outDir_ref \
         $(find $references_genomes_folder -type f -name "*.fna")  2>> $log &&
-    echo "Sourmash signatures for references are at: "$outdir_ref
+    echo "Sourmash signatures for references are at: "$sourmash_outDir_ref
 
 
     ## Run search
     echo ""
     echo "Searching query signatures in reference signatures"
-    sourmash search --containment -k $k $outdir_query"assembly.fasta.sig" $outdir_ref -o $outdir_query"/sourmash_out.csv" 2>> $log
+    sourmash search --containment -k $k $sourmash_outDir_query"assembly.fasta.sig" $sourmash_outDir_ref -o $sourmash_outDir_query"/sourmash_out.csv" 2>> $log
 
 }
 
@@ -250,7 +256,7 @@ quality_asm(){
     
     ## BUSCO UNICYCLER
     echo "Running BUSCO"
-    busco -f -c $threads -m genome --download_path $path_to_busco_dataset -l $busco_dataset -i $unicycler_asm_fasta --metaeuk -o $unicycler_asm"/busco_assessment" >> $log &&
+    busco -f -c $threads -m genome --download_path $path_to_busco_dataset -l $busco_dataset -i $unicycler_outDir_fasta --metaeuk -o $unicycler_outDir"/busco_assessment" >> $log &&
 
     ## SOURMASH
     echo "Running Sourmash"
@@ -259,10 +265,10 @@ quality_asm(){
     echo "Selecting the most similar reference"
     
     ## Add to report later
-    reference=$(cut -d "," -f "1,3" $outdir_query"/sourmash_out.csv" | head -n 2 | grep -o "GC[^.]*") &&
+    reference=$(cut -d "," -f "1,3" $sourmash_outDir_query"/sourmash_out.csv" | head -n 2 | grep -o "GC[^.]*") &&
     reference=$(find $references_genomes_folder -type f -name $reference"*.fna")
     reference_feature=$(grep -o ".*/" <<< $reference)"genomic.gff" 
-    reference_similarity=$(cut -d "," -f "1,3" $outdir_query"/sourmash_out.csv" | head -n 2 | grep -o "^0....")
+    reference_similarity=$(cut -d "," -f "1,3" $sourmash_outDir_query"/sourmash_out.csv" | head -n 2 | grep -o "^0....")
 
     echo "The selected reference genome is: " $reference
     echo "With a similarity of: " $reference_similarity
@@ -272,7 +278,7 @@ quality_asm(){
     ## QUAST
     echo "Running Quast"
     quast --circos --plots-format "png" -t $threads -r $reference --features "GFF:"$reference_feature -1 $R1_file -2 $R2_file \
-        -o $wd"/quast_assess" $unicycler_asm_fasta 2>> $log
+        -o $wd"/quast_assess" $unicycler_outDir_fasta 2>> $log
 }
 
 cps_serotyping(){
@@ -281,13 +287,12 @@ cps_serotyping(){
     echo "Step 4: Capsule serotyping using SeroCall"
     aesthetics
 
-    out_serocall=$wd"/serotype_seroCall"
-    create_wd $out_serocall
+    create_wd $serocall_outDir
     echo " "
-    serocall -t $threads -o $out_serocall"/seroCall" $R1_file $R2_file &&
+    serocall -t $threads -o $serocall_outDir"/seroCall" $R1_file $R2_file &&
 
     ## To report
-    serotype=$(cat $out_serocall"/seroCall_calls.txt" | grep -o "^[0-9].*")
+    serotype=$(cat $serocall_outDir"/seroCall_calls.txt" | grep -o "^[0-9].*")
 }
 
 sequence_typing (){
@@ -297,16 +302,16 @@ sequence_typing (){
     aesthetics
 
     # create dir for MLST and cgMLST
-    mlst_outdir=$wd"/mlst/"
-    create_wd $mlst_outdir
+    mlst_outDir=$wd"/mlst/"
+    create_wd $mlst_outDir
 
 
     ## Classic MLST
     echo " "
     echo "Starting classic MLST"
     
-    mlst --quiet --scheme "spneumoniae" --threads $threads $unicycler_asm_fasta > $mlst_outdir"MLST.tsv"
-    ST=$(cat $mlst_outdir"MLST.tsv" | cut -f 3)
+    mlst --quiet --scheme "spneumoniae" --threads $threads $unicycler_outDir_fasta > $mlst_outDir"MLST.tsv"
+    ST=$(cat $mlst_outDir"MLST.tsv" | cut -f 3)
 
     ## cgMLST
     echo " "
@@ -318,17 +323,15 @@ sequence_typing (){
         --ptf $exec_path"/prodigal_training_files/Streptococcus_pneumoniae.trn" --cpu $threads >> $log
 
     ## Alellic calling
-    allelic_call=$wd"/allelic_call_chewBBACCA"
-    chewBBACA.py AlleleCall --cds-input -i $pyrodigal_outdir -g $cgMLST_scheme -o $allelic_call --cpu $threads --cds $pyrodigal_outdir"/genes.aa.fasta" \
+    chewBBACA.py AlleleCall --cds-input -i $pyrodigal_outDir -g $cgMLST_scheme -o $allelic_call_outDir --cpu $threads --cds $pyrodigal_outDir"/genes.aa.fasta" \
         --output-novel --output-missing --no-inferred  >> $log
 
     ## Add to report
     ## Headers
     ### EXAC INF PLOT3 PLOT5 LOTSC NIPH NIPHEM ALM ASM PAMA LNF Invalid CDSs Classified_CDSs Total_CDSs
-    cgMLST_stats=$(grep -o "\b[0-9].*" $allelic_call"/results_statistics.tsv")
+    cgMLST_stats=$(grep -o "\b[0-9].*" $allelic_call_outDir"/results_statistics.tsv")
 
 }
-
 
 CDS_prediction (){
     ## CDS prediction with pyrodigal
@@ -337,15 +340,14 @@ CDS_prediction (){
     echo "Step 5: Gene prediction with pyrodigal"
     aesthetics
     
-    pyrodigal_outdir=$wd"/cds_pred_pyrodigal"
-    create_wd $pyrodigal_outdir
+    create_wd $pyrodigal_outDir
 
     pyrodigal -j $threads -t $train_file_pyrodigal \
-        -i $unicycler_asm_fasta -f "gff" -o $pyrodigal_outdir"/genes.gff" -a $pyrodigal_outdir"/genes.aa.fasta" -d $pyrodigal_outdir"/genes.fasta" -p "single"
+        -i $unicycler_outDir_fasta -f "gff" -o $pyrodigal_outDir"/genes.gff" -a $pyrodigal_outDir"/genes.aa.fasta" -d $pyrodigal_outDir"/genes.fasta" -p "single"
     
     ## Headers are wrong in the protein file of prodigal
     echo "Fixing protein headers"
-    sed 's/#.*//g; s/>\([^ ]*\)/& ID=\1;/' $pyrodigal_outdir"/genes.aa.fasta" > $pyrodigal_outdir"/genes_fixed.aa.fasta"
+    sed 's/#.*//g; s/>\([^ ]*\)/& ID=\1;/' $pyrodigal_outDir"/genes.aa.fasta" > $pyrodigal_outDir"/genes_fixed.aa.fasta"
 
 }
 
@@ -355,7 +357,6 @@ AMR_and_virulence(){
     echo "Step 7: AMR and virulence factor annotation using ARIBA and AMRFinderPlus"
     aesthetics
 
-    ariba_outDir=$wd"/ariba_out/"
     create_wd $ariba_outDir
     if [ -f $ariba_outDir$ariba_db_out".fa" && -f $ariba_outDir$ariba_db_out".tsv" ];
     then
@@ -379,6 +380,7 @@ AMR_and_virulence(){
 }
 
 GPSC_assign(){
+    create_wd $poppunk_outDir
     poppunk_assign --db $path_to_GPSC_db"GPS_v9" --external-clustering $path_to_GPSC_db"GPS_v9_external_clusters.csv" \
         --query $qfile --output <output folder>
 }
@@ -409,7 +411,7 @@ export_to_report(){
     ## NIPH NIPHEM ALM ASM PAMA LNF Invalid CDSs Classified_CDSs Total_CDSs ReferenceID referenceSimilarity assembly statistics
 
     ## This part creates the qfile.txt that popPUNK for GPSC assignemnt needs
-    echo -e "$sampleID\t$unicycler_asm_fasta" >> $qfile
+    echo -e "$sampleID\t$unicycler_outDir_fasta" >> $qfile
 }
 
 ## START PIPELINE

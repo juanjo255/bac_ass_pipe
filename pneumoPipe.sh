@@ -398,7 +398,7 @@ create_report () {
 ## Pipeline execution order for each sample
 pipeline_exec_per_strain(){
 
-    #trimming && assembly && quality_asm && cps_serotyping && CDS_prediction && sequence_typing
+    trimming && assembly && quality_asm && cps_serotyping && CDS_prediction && sequence_typing
 
 }
 

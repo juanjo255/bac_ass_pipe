@@ -45,6 +45,6 @@ echo "Downloading GPSC db and metadata (10GB)"
 mkdir -p $path_to_GPSC_db
 wget -O $path_to_GPSC_db"$(basename $link_to_GPSC_db)" $link_to_GPSC_db
 wget -O $path_to_GPSC_db"$(basename $link_to_GPSC_meta)" $link_to_GPSC_meta
-
+tar -xzf "$(basename $link_to_GPSC_db)"
 
 echo "Files were downloaded in $wd"

@@ -1,2 +1,2 @@
-micromamba create -n pneumopipe -c conda-forge -c bioconda python=3.10 blast=2.15 spades fastp unicycler bwa samtools busco quast fastqc chewbbaca ncbi-amrfinderplus mummer pyrodigal poppunk=2.7.0 bowtie2 cd-hit
+micromamba create -n pneumopipe -c conda-forge -c bioconda python=3.10 blast=2.15 spades fastp unicycler bwa samtools busco quast fastqc chewbbaca ncbi-amrfinderplus mlst mummer pyrodigal poppunk=2.7.0 bowtie2 cd-hit
 pip install sourmash multiqc ariba

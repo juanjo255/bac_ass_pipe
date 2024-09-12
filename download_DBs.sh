@@ -26,7 +26,7 @@ path_to_scheme=$wd"/scheme_alleles_spneumoniae/"
 path_to_GPSC_db=$wd"/GPSC_db/"
 ariba_db="card"
 ariba_db_out="card.db"
-ariba_outDir=$wd"/ariba_out/"
+ariba_outDir=$wd"/ariba_db/"
  
 
 echo "Updating the MLST database"

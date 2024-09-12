@@ -146,23 +146,6 @@ then
     wd=$wd"/"
 fi
 
-## If user decide to update database
-## Skip if cgMLST db exists, otherwise download
-if [ -z $update_MLST ];
-then
-    if [ -d $path_to_scheme ];
-    then
-        echo " "
-        echo "Directory with cgMLST scheme exists. Skipping downloading database"
-        echo " "
-    else 
-        mkdir "cgMLST scheme were not found at" $path_to_scheme
-        echo " "
-        echo "Downloading cgMLST scheme fo S. pneumoniae"
-        echo " " 
-        update_db
-    fi
-fi
 
 
 ##### FUNCTIONS #####
@@ -181,7 +164,7 @@ create_wd(){
         echo "Directory $1 exists."
         echo " "
     else 
-        mkdir $1
+        mkdir -p $1
         echo " "
         echo "Directory $1 created"
         echo " " 
@@ -345,25 +328,6 @@ sequence_typing (){
 
 }
 
-update_db () {
-    ## Update MLST, cgMLST and GPSC db
-
-    aesthetics
-    echo "Updating the MLST database"
-    aesthetics
-
-    mlst-download_pub_mlst -j 5 -d $(echo $(grep -Po ".*(?=bin)" <<< $(which mlst))"db/pubmlst")
-    mlst-make_blast_db
-    
-    echo "Updating the cgMLST"
-    bash $exec_path"/pneumoSchemeLoci/download_schemes_spneumoniae.sh" $path_to_scheme
-
-    echo "Downloading GPSC db and metadata (10GB)"
-    wget -O $path_to_GPSC_db"$(basename $link_to_GPSC_db)" $link_to_GPSC_db
-    wget -O $path_to_GPSC_db"$(basename $link_to_GPSC_meta)" $link_to_GPSC_meta
-
-    echo "Files were downloaded in the working directory"
-}
 
 CDS_prediction (){
     ## CDS prediction with pyrodigal
@@ -411,18 +375,6 @@ AMR_and_virulence(){
     echo ""
     ariba run $ariba_outDir"ariba.$ariba_db.prepareref" $R1_file $R2_file $ariba_outDir"ariba.run"
 
-
-    ## Update AMRFinder database
-    echo ""
-    echo "trying to update AMRFinder database"
-    echo ""
-    amrfinder -u
-    
-    echo " "
-    echo "Running AMRFinder"
-    echo " " 
-    amrfinder --threads $threads --protein $pyrodigal_outdir"/genes.aa.fasta" \
-        --nucleotide $pyrodigal_outdir"/genes.fasta" --gff $pyrodigal_outdir"/genes.gff" --annotation_format "prodigal"
 }
 
 GPSC_assign(){
@@ -440,7 +392,7 @@ create_report () {
 }
 
 ## Pipeline execution order
-pipeline_exec(){
+pipeline_exec_per_strain(){
 
     #trimming && assembly && quality_asm && cps_serotyping && CDS_prediction && sequence_typing
 
@@ -485,7 +437,7 @@ then
         wd=$keep_wd_body$output_dir
         create_wd $wd
         echo "results will be saved at" $wd
-        pipeline_exec
+        pipeline_exec_per_strain
         export_to_report
     done
 else
@@ -500,7 +452,7 @@ else
     create_report
     create_wd $wd
     echo "results will be saved at" $wd
-    pipeline_exec
+    pipeline_exec_per_strain
     export_to_report
 fi
 echo "Finished"

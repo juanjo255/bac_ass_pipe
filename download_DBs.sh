@@ -38,7 +38,7 @@ bash $exec_path"/pneumoSchemeLoci/download_schemes_spneumoniae.sh" $path_to_sche
 
 echo "Downloading ARIBA db"
 mkdir -p $ariba_outDir
-ariba getref $ariba_outDir$ariba_db $ariba_outDir$ariba_db_out &&
+ariba getref $ariba_db $ariba_outDir$ariba_db_out &&
 ariba prepareref -f $ariba_outDir$ariba_db_out".fa" -m $ariba_outDir$ariba_db_out".tsv" $ariba_outDir"ariba.$ariba_db.prepareref" && echo "done"
 
 echo "Downloading GPSC db and metadata (10GB)"

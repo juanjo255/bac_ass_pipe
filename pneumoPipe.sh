@@ -25,6 +25,7 @@ path_to_scheme=$wd"/scheme_alleles_spneumoniae/"
 path_to_busco_dataset=$wd
 path_to_GPSC_db=$wd"/GPSC_db/"
 link_to_GPSC_db="https://gps-project.cog.sanger.ac.uk/GPS_v9.tar.gz"
+link_to_GPSC_meta="https://gps-project.cog.sanger.ac.uk/GPS_v9_external_clusters.csv"
 train_file_pyrodigal=$exec_path"/prodiga_training_files/prodigal_training_files/Streptococcus_pneumoniae.trn"
 unicycler_asm_fasta=$unicycler_asm"/"$prefix1".fasta"
 ariba_db="card"
@@ -35,9 +36,9 @@ pneumoPipe_help() {
     echo "
     pneumoPipe - Bacterial Assembly Pipeline for Illumina reads
 
-    Author:
-    Gustavo Gamez
-    Juan Picon Cossio
+    Authors:
+    Juan Picón Cossio
+    Gustavo Gámez
 
     Version: 0.1
 
@@ -357,8 +358,9 @@ update_db () {
     echo "Updating the cgMLST"
     bash $exec_path"/pneumoSchemeLoci/download_schemes_spneumoniae.sh" $path_to_scheme
 
-    echo "Downloading GPSC db (10GB)"
-    wget -o $path_to_GPSC_db"$(basename $link_to_GPSC_db)" $link_to_GPSC_db
+    echo "Downloading GPSC db and metadata (10GB)"
+    wget -O $path_to_GPSC_db"$(basename $link_to_GPSC_db)" $link_to_GPSC_db
+    wget -O $path_to_GPSC_db"$(basename $link_to_GPSC_meta)" $link_to_GPSC_meta
 
     echo "Files were downloaded in the working directory"
 }
@@ -422,6 +424,11 @@ AMR_and_virulence(){
     amrfinder --threads $threads --protein $pyrodigal_outdir"/genes.aa.fasta" \
         --nucleotide $pyrodigal_outdir"/genes.fasta" --gff $pyrodigal_outdir"/genes.gff" --annotation_format "prodigal"
 }
+
+GPSC_assign(){
+
+}
+
 
 ## Create report for summary of pipeline results
 create_report () {

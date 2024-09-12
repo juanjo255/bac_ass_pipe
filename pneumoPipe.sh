@@ -31,6 +31,7 @@ unicycler_outDir_fasta=$unicycler_outDir"/"$prefix1".fasta"
 ariba_db="card"
 ariba_db_out="card.db"
 qfile=$wd"/qfile.txt"
+sourmash_outDir_ref=$wd"/reference_genomes_signatures/"
 
 ## Help message
 pneumoPipe_help() {
@@ -131,7 +132,6 @@ fi
 outdirs(){
     fastqc_outDir=$wd"QC_check"
     unicycler_outDir=$wd"unicycler_outDir"
-    sourmash_outDir_ref=$wd"/reference_genomes_signatures/"
     sourmash_outDir_query=$wd"/sourmash_assess/"
     serocall_outDir=$wd"/serotype_seroCall"
     mlst_outDir=$wd"/mlst/"
@@ -441,7 +441,7 @@ then
         R1_file=$i
         R2_file=$(echo "$i" | sed 's/R1/R2/')
 
-        sampleID=$(echo "$i" | sed 's/R1.*//')
+        sampleID=$(basename "$i" | sed 's/R1.*//'))
 
         aesthetics
         echo "Running pneumoPipe for: " $sampleID

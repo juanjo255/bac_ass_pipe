@@ -382,7 +382,7 @@ AMR_and_virulence(){
 GPSC_assign(){
     create_wd $poppunk_outDir
     poppunk_assign --db $path_to_GPSC_db"GPS_v9" --external-clustering $path_to_GPSC_db"GPS_v9_external_clusters.csv" \
-        --query $qfile --output <output folder>
+        --query $qfile --output $poppunk_outDir
 }
 
 

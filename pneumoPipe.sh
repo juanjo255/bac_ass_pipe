@@ -30,6 +30,7 @@ train_file_pyrodigal=$exec_path"/prodiga_training_files/prodigal_training_files/
 unicycler_asm_fasta=$unicycler_asm"/"$prefix1".fasta"
 ariba_db="card"
 ariba_db_out="card.db"
+qfile=$wd"/qfile.txt"
 
 ## Help message
 pneumoPipe_help() {
@@ -379,7 +380,7 @@ AMR_and_virulence(){
 
 GPSC_assign(){
     poppunk_assign --db $path_to_GPSC_db"GPS_v9" --external-clustering $path_to_GPSC_db"GPS_v9_external_clusters.csv" \
-        --query qfile.txt --output <output folder>
+        --query $qfile --output <output folder>
 }
 
 
@@ -404,11 +405,11 @@ export_to_report(){
     echo -e "$sampleID\t$serotype\t$ST\t$cgMLST_stats\t$reference\t$reference_similarity\t$asm_stats" >> $report
     
     ## HEADERS ##
-    ##headers=ReadsID referenceID serotype_pctg_similarity ST EXAC INF PLOT3 PLOT5 LOTSC \
+    ##headers=sampleID referenceID serotype_pctg_similarity ST EXAC INF PLOT3 PLOT5 LOTSC \
     ## NIPH NIPHEM ALM ASM PAMA LNF Invalid CDSs Classified_CDSs Total_CDSs ReferenceID referenceSimilarity assembly statistics
 
     ## This part creates the qfile.txt that popPUNK for GPSC assignemnt needs
-    echo -e "$sampleID\t$unicycler_asm_fasta"
+    echo -e "$sampleID\t$unicycler_asm_fasta" >> $qfile
 }
 
 ## START PIPELINE

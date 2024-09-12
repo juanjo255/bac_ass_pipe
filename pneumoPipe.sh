@@ -384,6 +384,8 @@ GPSC_assign(){
     poppunk_assign --threads $threads --db $path_to_GPSC_db"GPS_v9" --external-clustering $path_to_GPSC_db"GPS_v9_external_clusters.csv" \
         --query $qfile --output $poppunk_outDir --update-db
     #poppunk_visualise --grapetree --ref-db $path_to_GPSC_db"GPS_v9" --threads $threads --output $poppunk_outDir"/viz_all_db"
+    #poppunk_visualise --grapetree --ref-db $path_to_GPSC_db"GPS_v9" --query-db --threads $threads --output $poppunk_outDir"/viz_all_db"
+
 }
 
 ## Create report for summary of pipeline results

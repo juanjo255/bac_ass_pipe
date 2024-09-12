@@ -23,6 +23,8 @@ scaled=100
 busco_dataset="lactobacillales_odb10"
 path_to_scheme=$wd"/scheme_alleles_spneumoniae/"
 path_to_busco_dataset=$wd
+path_to_GPSC_db=$wd"/GPSC_db/"
+link_to_GPSC_db="https://gps-project.cog.sanger.ac.uk/GPS_v9.tar.gz"
 train_file_pyrodigal=$exec_path"/prodiga_training_files/prodigal_training_files/Streptococcus_pneumoniae.trn"
 unicycler_asm_fasta=$unicycler_asm"/"$prefix1".fasta"
 ariba_db="card"
@@ -343,7 +345,7 @@ sequence_typing (){
 }
 
 update_db () {
-    ## Update MLST, cgMLST and AMRFinder database
+    ## Update MLST, cgMLST and GPSC db
 
     aesthetics
     echo "Updating the MLST database"
@@ -354,9 +356,11 @@ update_db () {
     
     echo "Updating the cgMLST"
     bash $exec_path"/pneumoSchemeLoci/download_schemes_spneumoniae.sh" $path_to_scheme
-    echo "Files were downloaded in the working directory"
 
-   
+    echo "Downloading GPSC db (10GB)"
+    wget -o $path_to_GPSC_db"$(basename $link_to_GPSC_db)" $link_to_GPSC_db
+
+    echo "Files were downloaded in the working directory"
 }
 
 CDS_prediction (){

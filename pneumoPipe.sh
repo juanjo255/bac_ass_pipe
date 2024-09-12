@@ -128,16 +128,18 @@ then
 fi
 
 ## outDIrs
-fastqc_outDir=$wd"QC_check"
-unicycler_outDir=$wd"unicycler_outDir"
-sourmash_outDir_ref=$wd"/reference_genomes_signatures/"
-sourmash_outDir_query=$wd"/sourmash_assess/"
-serocall_outDir=$wd"/serotype_seroCall"
-mlst_outDir=$wd"/mlst/"
-allelic_call_outDir=$wd"/allelic_call_outDir_chewBBACCA"
-pyrodigal_outDir=$wd"/cds_pred_pyrodigal"
-ariba_outDir=$wd"/ariba_out/"
-poppunk_outDir=$wd"/poppunk_out/"
+outdirs(){
+    fastqc_outDir=$wd"QC_check"
+    unicycler_outDir=$wd"unicycler_outDir"
+    sourmash_outDir_ref=$wd"/reference_genomes_signatures/"
+    sourmash_outDir_query=$wd"/sourmash_assess/"
+    serocall_outDir=$wd"/serotype_seroCall"
+    mlst_outDir=$wd"/mlst/"
+    allelic_call_outDir=$wd"/allelic_call_outDir_chewBBACCA"
+    pyrodigal_outDir=$wd"/cds_pred_pyrodigal"
+    ariba_outDir=$wd"/ariba_out/"
+    poppunk_outDir=$wd"/poppunk_out/"
+}
 
 # if [ -z $kraken_db ];
 # then
@@ -256,7 +258,7 @@ quality_asm(){
     
     ## BUSCO UNICYCLER
     echo "Running BUSCO"
-    busco -f -c $threads -m genome --download_path $path_to_busco_dataset -l $busco_dataset -i $unicycler_outDir_fasta --metaeuk -o $unicycler_outDir"/busco_assessment" >> $log &&
+    busco -f -c $threads -m genome --download_path $path_to_busco_dataset -l $busco_dataset -i $unicycler_outDir_fasta -o $unicycler_outDir"/busco_assessment" >> $log &&
 
     ## SOURMASH
     echo "Running Sourmash"
@@ -452,6 +454,8 @@ then
         set_name_for_outfiles
         wd=$keep_wd_body$output_dir
         create_wd $wd
+        ## Create outdirs with new wd
+        outdirs
         echo "results will be saved at" $wd
         pipeline_exec_per_strain
         export_to_report
@@ -467,6 +471,8 @@ else
     wd=$wd$output_dir
     create_report
     create_wd $wd
+    ## Create outdirs with new wd
+    outdirs
     echo "results will be saved at" $wd
     pipeline_exec_per_strain
     export_to_report

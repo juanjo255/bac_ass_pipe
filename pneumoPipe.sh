@@ -381,10 +381,10 @@ AMR_and_virulence(){
 
 GPSC_assign(){
     create_wd $poppunk_outDir
-    poppunk_assign --db $path_to_GPSC_db"GPS_v9" --external-clustering $path_to_GPSC_db"GPS_v9_external_clusters.csv" \
-        --query $qfile --output $poppunk_outDir
+    poppunk_assign --threads $threads --db $path_to_GPSC_db"GPS_v9" --external-clustering $path_to_GPSC_db"GPS_v9_external_clusters.csv" \
+        --query $qfile --output $poppunk_outDir --update-db
+    #poppunk_visualise --grapetree --ref-db $path_to_GPSC_db"GPS_v9" --threads $threads --output $poppunk_outDir"/viz_all_db"
 }
-
 
 ## Create report for summary of pipeline results
 create_report () {
@@ -395,13 +395,19 @@ create_report () {
 
 }
 
-## Pipeline execution order
+## Pipeline execution order for each sample
 pipeline_exec_per_strain(){
 
     #trimming && assembly && quality_asm && cps_serotyping && CDS_prediction && sequence_typing
 
 }
 
+## Pipeline execution for all samples previuosly proccessed
+
+pipeline_exec_all_strain(){
+    GPSC_assign
+
+}
 export_to_report(){
     #SampleID referenceID serotype_pctg_similarity ST cgMLSTStats ReferenceID referenceSimilarity assembly statistics
     echo -e "$sampleID\t$serotype\t$ST\t$cgMLST_stats\t$reference\t$reference_similarity\t$asm_stats" >> $report

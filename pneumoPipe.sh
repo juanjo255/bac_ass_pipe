@@ -441,7 +441,7 @@ then
         R1_file=$i
         R2_file=$(echo "$i" | sed 's/R1/R2/')
 
-        sampleID=$(basename "$i" | sed 's/R1.*//'))
+        sampleID=$(basename "$i" | sed 's/R1.*//')
 
         aesthetics
         echo "Running pneumoPipe for: " $sampleID

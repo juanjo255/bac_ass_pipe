@@ -19,6 +19,7 @@ threads=4
 output_dir="pneumoPipe_out"
 wd=$(pwd)
 k=51
+kmer_seroBA=71
 scaled=100
 busco_dataset="lactobacillales_odb10"
 path_to_scheme=$wd"/scheme_alleles_spneumoniae/"
@@ -31,6 +32,7 @@ ariba_db="card"
 ariba_db_out="card.db"
 qfile=$wd"/qfile.txt"
 sourmash_outDir_ref=$wd"/reference_genomes_signatures/"
+
 
 ## Help message
 pneumoPipe_help() {
@@ -134,6 +136,7 @@ outdirs(){
     unicycler_outDir_fasta=$unicycler_outDir"/"$prefix1".fasta"
     sourmash_outDir_query=$wd"/sourmash_assess/"
     serocall_outDir=$wd"/serotype_seroCall"
+    seroba_outDir=$wd"/serotype_seroBA"
     mlst_outDir=$wd"/mlst/"
     allelic_call_outDir=$wd"/allelic_call_outDir_chewBBACCA"
     pyrodigal_outDir=$wd"/cds_pred_pyrodigal"
@@ -286,12 +289,18 @@ quality_asm(){
 cps_serotyping(){
 
     aesthetics
-    echo "Step 4: Capsule serotyping using SeroCall"
+    echo "Step 4: Capsule serotyping using seroBA"
     aesthetics
 
-    create_wd $serocall_outDir
+    create_wd $seroba_outDir
     echo " "
-    serocall -t $threads -o $serocall_outDir"/seroCall" $R1_file $R2_file &&
+    echo "Setting seroBA database"
+    seroba createDBs $exec_path"/seroba/database" $kmer_seroBA
+    seroba -t $threads -o $seroba_outDir"/seroCall" $R1_file $R2_file &&
+
+    # create_wd $serocall_outDir
+    # echo " "
+    # serocall -t $threads -o $serocall_outDir"/seroCall" $R1_file $R2_file &&
 
     ## To report
     serotype=$(cat $serocall_outDir"/seroCall_calls.txt" | grep -o "^[0-9].*")
